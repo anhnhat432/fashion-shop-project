@@ -26,7 +26,7 @@ export default function RootNavigator() {
   }
 
   return (
-    <Stack.Navigator>
+    <Stack.Navigator screenOptions={{ animation: 'slide_from_right' }}>
       {!user ? (
         <>
           <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />

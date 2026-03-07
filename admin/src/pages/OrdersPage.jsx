@@ -58,16 +58,24 @@ export default function OrdersPage() {
 
       {!!orders.length && (
         <div className="page-card table-wrap">
-          <table>
-            <thead><tr><th>Khach hang</th><th>Tong tien</th><th>Trang thai</th><th>Cap nhat</th></tr></thead>
+          <table className="orders-table">
+            <thead>
+              <tr><th>Order ID</th><th>Khach hang</th><th>Tong tien</th><th>Trang thai</th><th>Cap nhat</th></tr>
+            </thead>
             <tbody>
-              {orders.map((o) => (
+              {orders.map((o, idx) => (
                 <tr key={o._id}>
+                  <td className="order-id-cell">#{String(idx + 1).padStart(3, '0')}</td>
                   <td>{o.userId?.name || 'N/A'}</td>
-                  <td>{Number(o.totalAmount || 0).toLocaleString()} d</td>
+                  <td className="order-total-cell">{Number(o.totalAmount || 0).toLocaleString()} d</td>
                   <td><span className={`status-badge ${statusClassMap[o.status] || ''}`}>{o.status}</span></td>
                   <td>
-                    <select value={o.status} onChange={(e) => updateStatus(o._id, e.target.value)} disabled={updatingId === o._id}>
+                    <select
+                      className="order-status-select"
+                      value={o.status}
+                      onChange={(e) => updateStatus(o._id, e.target.value)}
+                      disabled={updatingId === o._id}
+                    >
                       {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </td>

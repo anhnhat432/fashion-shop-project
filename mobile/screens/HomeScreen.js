@@ -1,18 +1,37 @@
-import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, FlatList, Image, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ActivityIndicator, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import api from '../services/api';
+import SearchBar from '../components/SearchBar';
+import CategoryList from '../components/CategoryList';
+import ProductCard from '../components/ProductCard';
+
+const allCategory = { _id: '', name: 'Tat ca' };
 
 export default function HomeScreen({ navigation }) {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([allCategory]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [error, setError] = useState('');
 
-  const fetchProducts = async () => {
+  const fetchCategories = async () => {
+    try {
+      const res = await api.get('/categories');
+      setCategories([allCategory, ...(res.data.data || [])]);
+    } catch (err) {
+      setCategories([allCategory]);
+    }
+  };
+
+  const fetchProducts = async (nextSearch = search, nextCategoryId = selectedCategoryId) => {
     setLoading(true);
     setError('');
     try {
-      const res = await api.get('/products', { params: { search: search.trim() } });
+      const params = { search: nextSearch.trim() };
+      if (nextCategoryId) params.categoryId = nextCategoryId;
+      const res = await api.get('/products', { params });
       setProducts(res.data.data || []);
     } catch (err) {
       setError(err.response?.data?.message || 'Khong tai duoc san pham');
@@ -23,19 +42,39 @@ export default function HomeScreen({ navigation }) {
   };
 
   useEffect(() => {
-    fetchProducts();
+    fetchCategories();
+    fetchProducts('', '');
   }, []);
+
+  const onSearch = () => {
+    fetchProducts(search, selectedCategoryId);
+  };
+
+  const onSelectCategory = (categoryId) => {
+    setSelectedCategoryId(categoryId);
+    fetchProducts(search, categoryId);
+  };
+
+  const emptyText = useMemo(() => {
+    if (search.trim() || selectedCategoryId) return 'Khong tim thay san pham phu hop';
+    return 'Chua co san pham';
+  }, [search, selectedCategoryId]);
 
   return (
     <View style={styles.container}>
-      <View style={styles.searchRow}>
-        <TextInput style={styles.input} value={search} onChangeText={setSearch} placeholder="Tim san pham" />
-        <Pressable style={styles.searchBtn} onPress={fetchProducts}><Text style={styles.searchBtnText}>Tim</Text></Pressable>
-      </View>
+      <SearchBar value={search} onChangeText={setSearch} onSearch={onSearch} />
+
+      <CategoryList categories={categories} selectedId={selectedCategoryId} onSelect={onSelectCategory} />
 
       <View style={styles.actionRow}>
-        <Pressable style={styles.actionBtn} onPress={() => navigation.navigate('Cart')}><Text style={styles.actionBtnText}>Gio hang</Text></Pressable>
-        <Pressable style={styles.actionBtn} onPress={() => navigation.navigate('Profile')}><Text style={styles.actionBtnText}>Tai khoan</Text></Pressable>
+        <Pressable style={styles.actionBtn} onPress={() => navigation.navigate('Cart')}>
+          <Ionicons name="cart-outline" size={18} color="#111827" />
+          <Text style={styles.actionText}>Gio hang</Text>
+        </Pressable>
+        <Pressable style={styles.actionBtn} onPress={() => navigation.navigate('Profile')}>
+          <Ionicons name="person-outline" size={18} color="#111827" />
+          <Text style={styles.actionText}>Tai khoan</Text>
+        </Pressable>
       </View>
 
       {loading ? (
@@ -48,7 +87,7 @@ export default function HomeScreen({ navigation }) {
       {!loading && error ? (
         <View style={styles.errorBox}>
           <Text style={styles.errorText}>{error}</Text>
-          <Pressable style={styles.retryBtn} onPress={fetchProducts}><Text style={styles.retryText}>Thu lai</Text></Pressable>
+          <Pressable style={styles.retryBtn} onPress={onSearch}><Text style={styles.retryText}>Thu lai</Text></Pressable>
         </View>
       ) : null}
 
@@ -56,16 +95,14 @@ export default function HomeScreen({ navigation }) {
         <FlatList
           data={products}
           keyExtractor={(item) => item._id}
-          ListEmptyComponent={<Text style={styles.empty}>Khong co san pham phu hop</Text>}
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={styles.listContent}
+          ListEmptyComponent={<Text style={styles.empty}>{emptyText}</Text>}
           renderItem={({ item }) => (
-            <TouchableOpacity style={styles.card} onPress={() => navigation.navigate('ProductDetail', { productId: item._id })}>
-              <Image source={{ uri: item.image || 'https://picsum.photos/100' }} style={styles.image} />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.price}>{Number(item.price || 0).toLocaleString()} d</Text>
-                <Text style={styles.desc} numberOfLines={2}>{item.description || 'San pham demo cho mon hoc'}</Text>
-              </View>
-            </TouchableOpacity>
+            <ProductCard
+              product={item}
+              onPress={() => navigation.navigate('ProductDetail', { productId: item._id })}
+            />
           )}
         />
       ) : null}
@@ -74,24 +111,27 @@ export default function HomeScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 12, gap: 8, backgroundColor: '#f3f5f7' },
-  searchRow: { flexDirection: 'row', gap: 8 },
+  container: { flex: 1, padding: 12, gap: 10, backgroundColor: '#f3f5f7' },
   actionRow: { flexDirection: 'row', gap: 8 },
-  input: { flex: 1, borderWidth: 1, borderColor: '#d1d5db', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 10, backgroundColor: '#fff' },
-  searchBtn: { backgroundColor: '#111827', borderRadius: 10, paddingHorizontal: 14, justifyContent: 'center' },
-  searchBtnText: { color: '#fff', fontWeight: '700' },
-  actionBtn: { flex: 1, backgroundColor: '#fff', borderWidth: 1, borderColor: '#d1d5db', borderRadius: 10, paddingVertical: 10, alignItems: 'center' },
-  actionBtnText: { fontWeight: '600', color: '#111827' },
+  actionBtn: {
+    flex: 1,
+    backgroundColor: '#fff',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 12,
+    paddingVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    flexDirection: 'row',
+    gap: 6
+  },
+  actionText: { color: '#111827', fontWeight: '700' },
   centerBox: { alignItems: 'center', marginTop: 30, gap: 8 },
   muted: { color: '#6b7280' },
-  card: { flexDirection: 'row', gap: 10, backgroundColor: '#fff', padding: 10, borderRadius: 10, marginBottom: 10 },
-  image: { width: 76, height: 76, borderRadius: 8, backgroundColor: '#eee' },
-  name: { fontWeight: '700', marginBottom: 2, color: '#111827' },
-  price: { fontWeight: '700', marginBottom: 2 },
-  desc: { color: '#6b7280', fontSize: 12 },
+  listContent: { paddingTop: 2, paddingBottom: 20 },
   errorBox: { backgroundColor: '#fee2e2', padding: 12, borderRadius: 10, gap: 8 },
   errorText: { color: '#b91c1c' },
   retryBtn: { alignSelf: 'flex-start', backgroundColor: '#111827', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8 },
   retryText: { color: '#fff', fontWeight: '700' },
-  empty: { textAlign: 'center', color: '#6b7280', marginTop: 30 }
+  empty: { textAlign: 'center', color: '#6b7280', marginTop: 28 }
 });

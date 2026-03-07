@@ -14,7 +14,11 @@ export default function LoginPage() {
     e.preventDefault();
     setError('');
     if (!email.trim() || !password) {
-      setError('Vui lòng nhập email và mật khẩu');
+      setError('Vui long nhap email va mat khau');
+      return;
+    }
+    if (!email.includes('@')) {
+      setError('Email khong hop le');
       return;
     }
 
@@ -32,11 +36,12 @@ export default function LoginPage() {
   return (
     <div className="auth-box">
       <h2>Admin Login</h2>
+      <p className="helper">Dung tai khoan seed de vao trang quan tri.</p>
       <form onSubmit={handleSubmit}>
         <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
         <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" />
         {error && <p className="error">{error}</p>}
-        <button type="submit" disabled={loading}>{loading ? 'Đang đăng nhập...' : 'Login'}</button>
+        <button type="submit" disabled={loading}>{loading ? 'Dang dang nhap...' : 'Login'}</button>
       </form>
     </div>
   );

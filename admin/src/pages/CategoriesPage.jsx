@@ -16,7 +16,7 @@ export default function CategoriesPage() {
       const res = await api.get('/categories');
       setCategories(res.data.data || []);
     } catch (err) {
-      setError(err.response?.data?.message || 'Không tải được danh mục');
+      setError(err.response?.data?.message || 'Khong tai duoc danh muc');
     } finally {
       setLoading(false);
     }
@@ -27,7 +27,10 @@ export default function CategoriesPage() {
   }, []);
 
   const saveCategory = async () => {
-    if (!name.trim()) return;
+    if (!name.trim() || name.trim().length < 2) {
+      setError('Ten danh muc toi thieu 2 ky tu');
+      return;
+    }
 
     try {
       if (editingId) {
@@ -39,7 +42,7 @@ export default function CategoriesPage() {
       setEditingId(null);
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Không lưu được danh mục');
+      setError(err.response?.data?.message || 'Khong luu duoc danh muc');
     }
   };
 
@@ -48,7 +51,7 @@ export default function CategoriesPage() {
       await api.delete(`/categories/${id}`);
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Không xóa được danh mục');
+      setError(err.response?.data?.message || 'Khong xoa duoc danh muc');
     }
   };
 
@@ -60,20 +63,21 @@ export default function CategoriesPage() {
   return (
     <Layout>
       <h1>Categories</h1>
-      <div className="row">
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Tên danh mục" />
-        <button onClick={saveCategory}>{editingId ? 'Cập nhật' : 'Thêm'}</button>
-        {editingId ? <button onClick={() => { setEditingId(null); setName(''); }}>Hủy</button> : null}
+      <p className="helper">Danh muc nen ngan gon, de loc san pham.</p>
+      <div className="row page-card">
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Ten danh muc" />
+        <button onClick={saveCategory}>{editingId ? 'Cap nhat' : 'Them'}</button>
+        {editingId ? <button onClick={() => { setEditingId(null); setName(''); }}>Huy</button> : null}
       </div>
 
       {loading ? <p>Loading...</p> : null}
       {error ? <p className="error">{error}</p> : null}
-      {!loading && !categories.length ? <p>Chưa có danh mục nào</p> : null}
+      {!loading && !categories.length ? <p className="page-card">Chua co danh muc nao</p> : null}
 
-      <ul>
+      <ul className="page-card">
         {categories.map((c) => (
           <li key={c._id}>
-            {c.name} <button onClick={() => startEdit(c)}>Sửa</button> <button onClick={() => removeCategory(c._id)}>Xóa</button>
+            {c.name} <button onClick={() => startEdit(c)}>Sua</button> <button onClick={() => removeCategory(c._id)}>Xoa</button>
           </li>
         ))}
       </ul>

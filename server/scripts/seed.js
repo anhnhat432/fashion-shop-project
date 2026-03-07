@@ -12,37 +12,62 @@ const seed = async () => {
 
     await Promise.all([User.deleteMany(), Category.deleteMany(), Product.deleteMany()]);
 
-    const admin = await User.create({
-      name: 'Admin',
+    await User.create({
+      name: 'Admin Fashion Shop',
       email: 'admin@fashion.com',
       password: '123456',
       phone: '0900000000',
-      address: 'HCM City',
+      address: 'Quan 1, TP.HCM',
       role: 'admin'
     });
 
-    const categories = await Category.insertMany([{ name: 'Áo thun' }, { name: 'Quần jeans' }, { name: 'Áo khoác' }]);
+    const categories = await Category.insertMany([
+      { name: 'Ao thun' },
+      { name: 'Ao so mi' },
+      { name: 'Quan jeans' },
+      { name: 'Ao khoac' }
+    ]);
 
     await Product.insertMany([
       {
-        name: 'Áo thun basic trắng',
-        price: 199000,
-        description: 'Áo cotton mềm mịn',
-        image: 'https://picsum.photos/300/300?1',
-        sizes: ['S', 'M', 'L'],
-        colors: ['Trắng', 'Đen'],
-        stock: 50,
+        name: 'Ao thun Basic Trang Premium',
+        price: 219000,
+        description: 'Chat cotton 100%, mac mat, phu hop di hoc va di choi.',
+        image: 'https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?auto=format&fit=crop&w=700&q=80',
+        sizes: ['S', 'M', 'L', 'XL'],
+        colors: ['Trang', 'Den', 'Xam'],
+        stock: 80,
         categoryId: categories[0]._id
       },
       {
-        name: 'Quần jeans xanh slim-fit',
-        price: 399000,
-        description: 'Form ôm trẻ trung',
-        image: 'https://picsum.photos/300/300?2',
+        name: 'Ao so mi Oxford Xanh Nhat',
+        price: 349000,
+        description: 'Form regular, lich su, phu hop di lam va thuyet trinh.',
+        image: 'https://images.unsplash.com/photo-1602810319428-019690571b5b?auto=format&fit=crop&w=700&q=80',
         sizes: ['M', 'L', 'XL'],
-        colors: ['Xanh'],
-        stock: 25,
+        colors: ['Xanh nhat', 'Trang'],
+        stock: 45,
         categoryId: categories[1]._id
+      },
+      {
+        name: 'Quan jeans Slim-fit Xanh Dam',
+        price: 429000,
+        description: 'Co gian nhe, dung form dep, de phoi do.',
+        image: 'https://images.unsplash.com/photo-1542272604-787c3835535d?auto=format&fit=crop&w=700&q=80',
+        sizes: ['29', '30', '31', '32', '33'],
+        colors: ['Xanh dam'],
+        stock: 60,
+        categoryId: categories[2]._id
+      },
+      {
+        name: 'Ao khoac Bomber Den',
+        price: 559000,
+        description: 'Vai day vua, giu am tot, kieu dang tre trung.',
+        image: 'https://images.unsplash.com/photo-1551028719-00167b16eac5?auto=format&fit=crop&w=700&q=80',
+        sizes: ['M', 'L', 'XL'],
+        colors: ['Den', 'Xanh reu'],
+        stock: 35,
+        categoryId: categories[3]._id
       }
     ]);
 

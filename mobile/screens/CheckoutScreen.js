@@ -11,9 +11,13 @@ export default function CheckoutScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
 
   const handleCheckout = async () => {
-    if (!shippingAddress.trim() || !phone.trim() || !cartItems.length) {
-      return Alert.alert('Lỗi', 'Thiếu thông tin đặt hàng');
+    if (!shippingAddress.trim() || shippingAddress.trim().length < 5) {
+      return Alert.alert('Loi', 'Dia chi nhan hang can toi thieu 5 ky tu');
     }
+    if (!phone.trim() || phone.trim().length < 9) {
+      return Alert.alert('Loi', 'So dien thoai khong hop le');
+    }
+    if (!cartItems.length) return Alert.alert('Loi', 'Gio hang dang trong');
 
     setLoading(true);
     try {
@@ -24,10 +28,10 @@ export default function CheckoutScreen({ navigation }) {
         paymentMethod
       });
       clearCart();
-      Alert.alert('Thành công', 'Đặt hàng thành công');
+      Alert.alert('Thanh cong', 'Dat hang thanh cong');
       navigation.navigate('OrderHistory');
     } catch (error) {
-      Alert.alert('Lỗi', error.response?.data?.message || 'Không thể tạo đơn hàng');
+      Alert.alert('Loi', error.response?.data?.message || 'Khong the tao don hang');
     } finally {
       setLoading(false);
     }
@@ -35,20 +39,21 @@ export default function CheckoutScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <TextInput style={styles.input} placeholder="Địa chỉ nhận hàng" value={shippingAddress} onChangeText={setShippingAddress} />
-      <TextInput style={styles.input} placeholder="Số điện thoại" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
-      <Text style={{ fontWeight: '700' }}>Phương thức thanh toán</Text>
+      <TextInput style={styles.input} placeholder="Dia chi nhan hang" value={shippingAddress} onChangeText={setShippingAddress} />
+      <TextInput style={styles.input} placeholder="So dien thoai" value={phone} onChangeText={setPhone} keyboardType="phone-pad" />
+      <Text style={styles.label}>Phuong thuc thanh toan</Text>
       <View style={styles.row}>
-        <Button title={paymentMethod === 'COD' ? '✓ COD' : 'COD'} onPress={() => setPaymentMethod('COD')} />
-        <Button title={paymentMethod === 'BANK_TRANSFER' ? '✓ Chuyển khoản' : 'Chuyển khoản'} onPress={() => setPaymentMethod('BANK_TRANSFER')} />
+        <Button title={paymentMethod === 'COD' ? 'OK COD' : 'COD'} onPress={() => setPaymentMethod('COD')} />
+        <Button title={paymentMethod === 'BANK_TRANSFER' ? 'OK Chuyen khoan' : 'Chuyen khoan'} onPress={() => setPaymentMethod('BANK_TRANSFER')} />
       </View>
-      <Button title={loading ? 'Đang đặt hàng...' : 'Xác nhận đặt hàng'} onPress={handleCheckout} disabled={loading} />
+      <Button title={loading ? 'Dang dat hang...' : 'Xac nhan dat hang'} onPress={handleCheckout} disabled={loading} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, gap: 10 },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 10 },
-  row: { flexDirection: 'row', gap: 8 }
+  container: { flex: 1, padding: 16, gap: 10, backgroundColor: '#f3f5f7' },
+  input: { borderWidth: 1, borderColor: '#ddd', borderRadius: 10, padding: 12, backgroundColor: '#fff' },
+  row: { flexDirection: 'row', gap: 8 },
+  label: { fontWeight: '700', marginTop: 4 }
 });

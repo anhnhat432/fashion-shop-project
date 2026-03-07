@@ -10,6 +10,7 @@ export default function ProductsPage() {
   const [form, setForm] = useState(initial);
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
   const fetchData = async () => {
@@ -20,7 +21,7 @@ export default function ProductsPage() {
       setProducts(pRes.data.data || []);
       setCategories(cRes.data.data || []);
     } catch (err) {
-      setError(err.response?.data?.message || 'Không tải được dữ liệu sản phẩm');
+      setError(err.response?.data?.message || 'Khong tai duoc du lieu san pham');
     } finally {
       setLoading(false);
     }
@@ -30,33 +31,44 @@ export default function ProductsPage() {
     fetchData();
   }, []);
 
-  const toPayload = {
-    ...form,
-    name: form.name.trim(),
-    description: form.description.trim(),
-    price: Number(form.price),
-    stock: Number(form.stock || 0),
-    sizes: form.sizes ? form.sizes.split(',').map((x) => x.trim()).filter(Boolean) : [],
-    colors: form.colors ? form.colors.split(',').map((x) => x.trim()).filter(Boolean) : []
-  };
-
   const saveProduct = async () => {
-    if (!toPayload.name || Number.isNaN(toPayload.price) || !toPayload.categoryId) {
-      setError('Tên, giá và danh mục là bắt buộc');
+    const payload = {
+      ...form,
+      name: form.name.trim(),
+      description: form.description.trim(),
+      price: Number(form.price),
+      stock: Number(form.stock || 0),
+      sizes: form.sizes ? form.sizes.split(',').map((x) => x.trim()).filter(Boolean) : [],
+      colors: form.colors ? form.colors.split(',').map((x) => x.trim()).filter(Boolean) : []
+    };
+
+    if (!payload.name || payload.name.length < 2) {
+      setError('Ten san pham toi thieu 2 ky tu');
+      return;
+    }
+    if (Number.isNaN(payload.price) || payload.price <= 0) {
+      setError('Gia san pham phai > 0');
+      return;
+    }
+    if (!payload.categoryId) {
+      setError('Vui long chon danh muc');
       return;
     }
 
+    setSaving(true);
     try {
       if (editingId) {
-        await api.put(`/products/${editingId}`, toPayload);
+        await api.put(`/products/${editingId}`, payload);
       } else {
-        await api.post('/products', toPayload);
+        await api.post('/products', payload);
       }
       setForm(initial);
       setEditingId(null);
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Không lưu được sản phẩm');
+      setError(err.response?.data?.message || 'Khong luu duoc san pham');
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -65,7 +77,7 @@ export default function ProductsPage() {
       await api.delete(`/products/${id}`);
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Không xóa được sản phẩm');
+      setError(err.response?.data?.message || 'Khong xoa duoc san pham');
     }
   };
 
@@ -86,41 +98,42 @@ export default function ProductsPage() {
   return (
     <Layout>
       <h1>Products</h1>
+      <p className="helper">Quan ly san pham nhanh cho demo mon hoc.</p>
       <div className="grid-form">
-        <input placeholder="Tên" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-        <input placeholder="Giá" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
-        <input placeholder="Mô tả" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+        <input placeholder="Ten" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+        <input placeholder="Gia" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+        <input placeholder="Mo ta" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
         <input placeholder="Image URL" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} />
         <input placeholder="Sizes (S,M,L)" value={form.sizes} onChange={(e) => setForm({ ...form, sizes: e.target.value })} />
-        <input placeholder="Colors (Đỏ,Xanh)" value={form.colors} onChange={(e) => setForm({ ...form, colors: e.target.value })} />
-        <input placeholder="Tồn kho" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
+        <input placeholder="Colors (Do,Xanh)" value={form.colors} onChange={(e) => setForm({ ...form, colors: e.target.value })} />
+        <input placeholder="Ton kho" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
         <select value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })}>
-          <option value="">-- Chọn danh mục --</option>
+          <option value="">-- Chon danh muc --</option>
           {categories.map((c) => (
             <option key={c._id} value={c._id}>{c.name}</option>
           ))}
         </select>
-        <button onClick={saveProduct}>{editingId ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm'}</button>
-        {editingId ? <button onClick={() => { setEditingId(null); setForm(initial); }}>Hủy sửa</button> : null}
+        <button onClick={saveProduct} disabled={saving}>{saving ? 'Dang luu...' : editingId ? 'Cap nhat san pham' : 'Them san pham'}</button>
+        {editingId ? <button onClick={() => { setEditingId(null); setForm(initial); }}>Huy sua</button> : null}
       </div>
 
       {loading ? <p>Loading...</p> : null}
       {error ? <p className="error">{error}</p> : null}
-      {!loading && !products.length ? <p>Chưa có sản phẩm nào</p> : null}
+      {!loading && !products.length ? <p className="page-card">Chua co san pham nao</p> : null}
 
       {!!products.length && (
         <table>
-          <thead><tr><th>Tên</th><th>Giá</th><th>Tồn kho</th><th>Danh mục</th><th>Hành động</th></tr></thead>
+          <thead><tr><th>Ten</th><th>Gia</th><th>Ton kho</th><th>Danh muc</th><th>Hanh dong</th></tr></thead>
           <tbody>
             {products.map((p) => (
               <tr key={p._id}>
                 <td>{p.name}</td>
-                <td>{p.price}</td>
+                <td>{Number(p.price).toLocaleString()} d</td>
                 <td>{p.stock}</td>
                 <td>{p.categoryId?.name}</td>
                 <td>
-                  <button onClick={() => startEdit(p)}>Sửa</button>
-                  <button onClick={() => removeProduct(p._id)}>Xóa</button>
+                  <button onClick={() => startEdit(p)}>Sua</button>{' '}
+                  <button onClick={() => removeProduct(p._id)}>Xoa</button>
                 </td>
               </tr>
             ))}

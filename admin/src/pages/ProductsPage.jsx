@@ -36,6 +36,7 @@ export default function ProductsPage() {
       ...form,
       name: form.name.trim(),
       description: form.description.trim(),
+      image: form.image.trim(),
       price: Number(form.price),
       stock: Number(form.stock || 0),
       sizes: form.sizes ? form.sizes.split(',').map((x) => x.trim()).filter(Boolean) : [],
@@ -50,12 +51,21 @@ export default function ProductsPage() {
       setError('Gia san pham phai > 0');
       return;
     }
+    if (Number.isNaN(payload.stock) || payload.stock < 0) {
+      setError('Ton kho phai >= 0');
+      return;
+    }
     if (!payload.categoryId) {
       setError('Vui long chon danh muc');
       return;
     }
+    if (payload.image && !payload.image.startsWith('http')) {
+      setError('Anh san pham can la URL bat dau bang http');
+      return;
+    }
 
     setSaving(true);
+    setError('');
     try {
       if (editingId) {
         await api.put(`/products/${editingId}`, payload);
@@ -122,23 +132,25 @@ export default function ProductsPage() {
       {!loading && !products.length ? <p className="page-card">Chua co san pham nao</p> : null}
 
       {!!products.length && (
-        <table>
-          <thead><tr><th>Ten</th><th>Gia</th><th>Ton kho</th><th>Danh muc</th><th>Hanh dong</th></tr></thead>
-          <tbody>
-            {products.map((p) => (
-              <tr key={p._id}>
-                <td>{p.name}</td>
-                <td>{Number(p.price).toLocaleString()} d</td>
-                <td>{p.stock}</td>
-                <td>{p.categoryId?.name}</td>
-                <td>
-                  <button onClick={() => startEdit(p)}>Sua</button>{' '}
-                  <button onClick={() => removeProduct(p._id)}>Xoa</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <div className="page-card table-wrap">
+          <table>
+            <thead><tr><th>Ten</th><th>Gia</th><th>Ton kho</th><th>Danh muc</th><th>Hanh dong</th></tr></thead>
+            <tbody>
+              {products.map((p) => (
+                <tr key={p._id}>
+                  <td>{p.name}</td>
+                  <td>{Number(p.price).toLocaleString()} d</td>
+                  <td>{p.stock}</td>
+                  <td>{p.categoryId?.name}</td>
+                  <td>
+                    <button onClick={() => startEdit(p)}>Sua</button>{' '}
+                    <button onClick={() => removeProduct(p._id)}>Xoa</button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
     </Layout>
   );

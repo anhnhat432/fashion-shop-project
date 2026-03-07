@@ -19,6 +19,7 @@ export default function RegisterScreen() {
     if (!payload.name || !payload.email || !payload.password) return Alert.alert('Loi', 'Ten, email, mat khau la bat buoc');
     if (!payload.email.includes('@')) return Alert.alert('Loi', 'Email khong hop le');
     if (payload.password.length < 6) return Alert.alert('Loi', 'Mat khau toi thieu 6 ky tu');
+    if (payload.phone && payload.phone.replace(/\D/g, '').length < 9) return Alert.alert('Loi', 'So dien thoai can toi thieu 9 so');
 
     setLoading(true);
     try {

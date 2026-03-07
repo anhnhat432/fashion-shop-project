@@ -3,6 +3,8 @@ import { Alert, Button, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useCart } from '../context/CartContext';
 import api from '../services/api';
 
+const onlyDigits = (value) => value.replace(/\D/g, '');
+
 export default function CheckoutScreen({ navigation }) {
   const { cartItems, clearCart } = useCart();
   const [shippingAddress, setShippingAddress] = useState('');
@@ -14,9 +16,12 @@ export default function CheckoutScreen({ navigation }) {
     if (!shippingAddress.trim() || shippingAddress.trim().length < 5) {
       return Alert.alert('Loi', 'Dia chi nhan hang can toi thieu 5 ky tu');
     }
-    if (!phone.trim() || phone.trim().length < 9) {
+
+    const normalizedPhone = onlyDigits(phone.trim());
+    if (normalizedPhone.length < 9 || normalizedPhone.length > 11) {
       return Alert.alert('Loi', 'So dien thoai khong hop le');
     }
+
     if (!cartItems.length) return Alert.alert('Loi', 'Gio hang dang trong');
 
     setLoading(true);
@@ -24,7 +29,7 @@ export default function CheckoutScreen({ navigation }) {
       await api.post('/orders', {
         items: cartItems,
         shippingAddress: shippingAddress.trim(),
-        phone: phone.trim(),
+        phone: normalizedPhone,
         paymentMethod
       });
       clearCart();

@@ -32,6 +32,7 @@ export default function CategoriesPage() {
       return;
     }
 
+    setError('');
     try {
       if (editingId) {
         await api.put(`/categories/${editingId}`, { name: name.trim() });
@@ -58,6 +59,7 @@ export default function CategoriesPage() {
   const startEdit = (category) => {
     setEditingId(category._id);
     setName(category.name);
+    setError('');
   };
 
   return (

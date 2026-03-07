@@ -1,0 +1,13 @@
+body { margin: 0; font-family: Arial, sans-serif; background: #f0f2f5; }
+.layout { display: flex; min-height: 100vh; }
+.sidebar { width: 220px; background: #1f2937; color: white; padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.sidebar a { color: #e5e7eb; text-decoration: none; }
+.sidebar button { margin-top: 12px; }
+.content { flex: 1; padding: 20px; }
+.auth-box { max-width: 360px; margin: 100px auto; background: white; padding: 20px; border-radius: 8px; }
+input, select, button { padding: 8px; margin: 4px 0; }
+table { width: 100%; background: white; border-collapse: collapse; }
+th, td { border: 1px solid #ddd; padding: 8px; }
+.grid-form { display: grid; grid-template-columns: repeat(2, minmax(200px, 1fr)); gap: 8px; margin-bottom: 16px; }
+.row { display: flex; gap: 8px; }
+.error { color: red; }

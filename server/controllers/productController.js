@@ -1,5 +1,14 @@
 const Product = require('../models/Product');
 
+const normalizePayload = (payload) => ({
+  ...payload,
+  name: payload.name?.trim(),
+  price: payload.price !== undefined ? Number(payload.price) : undefined,
+  stock: payload.stock !== undefined ? Number(payload.stock) : undefined,
+  sizes: Array.isArray(payload.sizes) ? payload.sizes : [],
+  colors: Array.isArray(payload.colors) ? payload.colors : []
+});
+
 const getProducts = async (req, res, next) => {
   try {
     const { search, categoryId } = req.query;
@@ -27,11 +36,12 @@ const getProductById = async (req, res, next) => {
 
 const createProduct = async (req, res, next) => {
   try {
-    const { name, price, description, image, sizes, colors, stock, categoryId } = req.body;
-    if (!name || !price || !categoryId) {
-      return res.status(400).json({ success: false, message: 'Name, price, categoryId are required' });
+    const payload = normalizePayload(req.body);
+    if (!payload.name || Number.isNaN(payload.price) || !payload.categoryId) {
+      return res.status(400).json({ success: false, message: 'name, valid price, categoryId are required' });
     }
-    const product = await Product.create({ name, price, description, image, sizes, colors, stock, categoryId });
+
+    const product = await Product.create(payload);
     res.status(201).json({ success: true, message: 'Product created', data: product });
   } catch (error) {
     next(error);
@@ -40,7 +50,12 @@ const createProduct = async (req, res, next) => {
 
 const updateProduct = async (req, res, next) => {
   try {
-    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    const payload = normalizePayload(req.body);
+    if (payload.price !== undefined && Number.isNaN(payload.price)) {
+      return res.status(400).json({ success: false, message: 'Price must be a number' });
+    }
+
+    const product = await Product.findByIdAndUpdate(req.params.id, payload, { new: true, runValidators: true });
     if (!product) return res.status(404).json({ success: false, message: 'Product not found' });
     res.json({ success: true, message: 'Product updated', data: product });
   } catch (error) {

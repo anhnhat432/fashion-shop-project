@@ -47,7 +47,7 @@ npm install
 npm start
 ```
 
-> Lưu ý: sửa `mobile/constants/config.js` để trỏ về IP backend phù hợp:
+> Sửa `mobile/constants/config.js` để trỏ về backend đúng môi trường:
 - Android emulator: `http://10.0.2.2:5000/api`
 - iOS simulator: `http://localhost:5000/api`
 - Điện thoại thật: `http://<LAN_IP_MAY_TINH>:5000/api`
@@ -61,6 +61,13 @@ npm run dev
 ```
 
 Admin web chạy mặc định ở `http://localhost:5173`.
+
+Tùy chọn cấu hình API URL cho admin:
+
+```bash
+# admin/.env
+VITE_API_BASE_URL=http://localhost:5000/api
+```
 
 ## 6) API chính
 
@@ -89,16 +96,25 @@ Admin web chạy mặc định ở `http://localhost:5173`.
 
 - JWT token: backend trả về ở login/register, mobile lưu AsyncStorage, admin lưu localStorage
 - Role: `user` và `admin`, route admin được bảo vệ
-- Product field dùng thống nhất: `name, price, description, image, sizes, colors, stock, categoryId`
-- Order item field dùng thống nhất: `productId, name, image, price, quantity, size, color`
+- Product field thống nhất: `name, price, description, image, sizes, colors, stock, categoryId`
+- Order item field thống nhất: `productId, name, image, price, quantity, size, color`
+- Response format: `{ success, message?, data? }`
 
-## 8) Điểm cần cấu hình thủ công
+## 8) Checklist chạy end-to-end nhanh
 
-1. `server/.env` (MONGO_URI, JWT_SECRET)
-2. `mobile/constants/config.js` để đúng URL backend
-3. CORS/back-end URL nếu deploy khác host
+1. Chạy backend + seed data (`server`).
+2. Đăng nhập admin ở web admin bằng tài khoản seed để quản lý category/product/order.
+3. Đăng ký user mới từ mobile.
+4. Từ mobile: xem sản phẩm -> thêm giỏ -> checkout -> xem lịch sử đơn.
+5. Quay lại admin: vào trang Orders để cập nhật trạng thái đơn.
 
-## 9) Mức độ hoàn thiện
+## 9) Những lỗi hay gặp & cách xử lý
 
-- Đủ CRUD cơ bản, auth JWT, phân quyền admin/user, đặt hàng, lịch sử đơn hàng.
-- UI đơn giản, dễ demo, dễ chỉnh sửa cho môn học.
+- **Mobile không gọi được API:** đổi `mobile/constants/config.js` sang đúng LAN IP/emulator URL.
+- **Admin login lỗi 401/403:** kiểm tra đã `npm run seed`, dùng đúng account admin seed.
+- **MongoDB connection failed:** kiểm tra `MONGO_URI` trong `server/.env`.
+
+## 10) Mức độ hoàn thiện
+
+- Đã có auth JWT, phân quyền admin/user, CRUD sản phẩm/danh mục, tạo đơn/lịch sử đơn, quản lý đơn trên admin.
+- UI giữ đơn giản, ưu tiên dễ chạy, dễ demo, dễ sửa.

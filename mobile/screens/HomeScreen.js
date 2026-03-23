@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Animated,
   FlatList,
   Pressable,
   ScrollView,
@@ -13,6 +14,7 @@ import api from "../services/api";
 import SearchBar from "../components/SearchBar";
 import CategoryList from "../components/CategoryList";
 import ProductCard from "../components/ProductCard";
+import SkeletonBlock from "../components/SkeletonBlock";
 import { FONTS } from "../constants/fonts";
 import { useCart } from "../context/CartContext";
 
@@ -26,6 +28,7 @@ export default function HomeScreen({ navigation }) {
   const [search, setSearch] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [error, setError] = useState("");
+  const revealAnim = useRef(new Animated.Value(0)).current;
 
   const fetchCategories = async () => {
     try {
@@ -59,6 +62,17 @@ export default function HomeScreen({ navigation }) {
     fetchCategories();
     fetchProducts("", "");
   }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      revealAnim.setValue(0);
+      Animated.timing(revealAnim, {
+        toValue: 1,
+        duration: 260,
+        useNativeDriver: true,
+      }).start();
+    }
+  }, [loading, revealAnim]);
 
   const onSearch = () => {
     fetchProducts(search, selectedCategoryId);
@@ -208,13 +222,41 @@ export default function HomeScreen({ navigation }) {
     </View>
   );
 
+  const renderLoadingState = () => (
+    <View style={styles.skeletonWrap}>
+      <View style={styles.skeletonHero}>
+        <SkeletonBlock style={styles.skeletonPill} />
+        <SkeletonBlock style={styles.skeletonTitle} />
+        <SkeletonBlock style={styles.skeletonSubtitle} />
+        <View style={styles.skeletonStatRow}>
+          <SkeletonBlock style={styles.skeletonStatCard} />
+          <SkeletonBlock style={styles.skeletonStatCard} />
+          <SkeletonBlock style={styles.skeletonStatCard} />
+        </View>
+      </View>
+      <SkeletonBlock style={styles.skeletonSearch} />
+      <View style={styles.skeletonChipRow}>
+        <SkeletonBlock style={styles.skeletonChip} />
+        <SkeletonBlock style={styles.skeletonChip} />
+        <SkeletonBlock style={styles.skeletonChip} />
+      </View>
+      <SkeletonBlock style={styles.skeletonProduct} />
+      <SkeletonBlock style={styles.skeletonProduct} />
+    </View>
+  );
+
+  const renderEmptyState = () => (
+    <View style={styles.emptyCard}>
+      <Ionicons name="search-outline" size={34} color="#9ca3af" />
+      <Text style={styles.emptyTitle}>{emptyText}</Text>
+      <Text style={styles.emptyCaption}>Thử đổi từ khóa tìm kiếm hoặc chuyển sang danh mục khác.</Text>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       {loading ? (
-        <View style={styles.centerBox}>
-          <ActivityIndicator size="large" />
-          <Text style={styles.muted}>Đang tải sản phẩm...</Text>
-        </View>
+        renderLoadingState()
       ) : null}
 
       {!loading && error ? (
@@ -227,20 +269,35 @@ export default function HomeScreen({ navigation }) {
       ) : null}
 
       {!loading && !error ? (
-        <FlatList
-          data={products}
-          keyExtractor={(item) => item._id}
-          showsVerticalScrollIndicator={false}
-          contentContainerStyle={styles.listContent}
-          ListHeaderComponent={renderHeader}
-          ListEmptyComponent={<Text style={styles.empty}>{emptyText}</Text>}
-          renderItem={({ item }) => (
-            <ProductCard
-              product={item}
-              onPress={() => openProductDetail(item._id)}
-            />
-          )}
-        />
+        <Animated.View
+          style={{
+            flex: 1,
+            opacity: revealAnim,
+            transform: [
+              {
+                translateY: revealAnim.interpolate({
+                  inputRange: [0, 1],
+                  outputRange: [12, 0],
+                }),
+              },
+            ],
+          }}
+        >
+          <FlatList
+            data={products}
+            keyExtractor={(item) => item._id}
+            showsVerticalScrollIndicator={false}
+            contentContainerStyle={styles.listContent}
+            ListHeaderComponent={renderHeader}
+            ListEmptyComponent={renderEmptyState()}
+            renderItem={({ item }) => (
+              <ProductCard
+                product={item}
+                onPress={() => openProductDetail(item._id)}
+              />
+            )}
+          />
+        </Animated.View>
       ) : null}
     </View>
   );
@@ -376,6 +433,22 @@ const styles = StyleSheet.create({
   },
   sectionMeta: { color: "#6b7280", fontFamily: FONTS.medium },
   centerBox: { alignItems: "center", marginTop: 30, gap: 8 },
+  skeletonWrap: { gap: 12, paddingTop: 4 },
+  skeletonHero: {
+    backgroundColor: "#fff",
+    borderRadius: 24,
+    padding: 18,
+    gap: 12,
+  },
+  skeletonPill: { width: 110, height: 24, borderRadius: 999 },
+  skeletonTitle: { width: "82%", height: 32, borderRadius: 12 },
+  skeletonSubtitle: { width: "100%", height: 18, borderRadius: 10 },
+  skeletonStatRow: { flexDirection: "row", gap: 10 },
+  skeletonStatCard: { flex: 1, height: 74, borderRadius: 16 },
+  skeletonSearch: { width: "100%", height: 56, borderRadius: 18 },
+  skeletonChipRow: { flexDirection: "row", gap: 10 },
+  skeletonChip: { width: 92, height: 40, borderRadius: 999 },
+  skeletonProduct: { width: "100%", height: 250, borderRadius: 18 },
   muted: { color: "#6b7280", fontFamily: FONTS.regular },
   listContent: { paddingTop: 2, paddingBottom: 20 },
   errorBox: {
@@ -399,4 +472,14 @@ const styles = StyleSheet.create({
     marginTop: 28,
     fontFamily: FONTS.regular,
   },
+  emptyCard: {
+    backgroundColor: "#fff",
+    borderRadius: 20,
+    padding: 22,
+    alignItems: "center",
+    gap: 8,
+    marginTop: 10,
+  },
+  emptyTitle: { color: "#111827", fontSize: 18, fontFamily: FONTS.bold },
+  emptyCaption: { color: "#6b7280", textAlign: "center", fontFamily: FONTS.regular },
 });

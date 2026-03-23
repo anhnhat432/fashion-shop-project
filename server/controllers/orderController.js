@@ -2,6 +2,7 @@ const Order = require("../models/Order");
 const Product = require("../models/Product");
 
 const ALLOWED_PAYMENT_METHODS = ["COD", "BANK_TRANSFER"];
+const ALLOWED_PAYMENT_STATUS = ["PENDING", "PAID"];
 const ALLOWED_ORDER_STATUS = [
   "PENDING",
   "CONFIRMED",
@@ -12,7 +13,15 @@ const ALLOWED_ORDER_STATUS = [
 
 const createOrder = async (req, res, next) => {
   try {
-    const { items, shippingAddress, phone, paymentMethod } = req.body;
+    const {
+      items,
+      shippingAddress,
+      phone,
+      paymentMethod,
+      bankTransferConfirmed,
+      paymentNote,
+      transferReference,
+    } = req.body;
 
     if (
       !Array.isArray(items) ||
@@ -127,10 +136,33 @@ const createOrder = async (req, res, next) => {
         .json({ success: false, message: "Invalid payment method" });
     }
 
-    const totalAmount = normalizedItems.reduce(
+    if (selectedPaymentMethod === 'BANK_TRANSFER' && !bankTransferConfirmed) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please confirm the simulated bank transfer before placing the order',
+      });
+    }
+
+    const itemsSubtotal = normalizedItems.reduce(
       (total, item) => total + item.price * item.quantity,
       0,
     );
+    const shippingFee = itemsSubtotal >= 499000 ? 0 : 30000;
+    const totalAmount = itemsSubtotal + shippingFee;
+
+    const normalizedPaymentNote =
+      typeof paymentNote === 'string' && paymentNote.trim()
+        ? paymentNote.trim()
+        : selectedPaymentMethod === 'BANK_TRANSFER'
+          ? 'Đã xác nhận chuyển khoản mô phỏng'
+          : 'Thanh toán khi nhận hàng';
+
+    const normalizedTransferReference =
+      selectedPaymentMethod === 'BANK_TRANSFER' && typeof transferReference === 'string'
+        ? transferReference.trim().slice(0, 40)
+        : '';
+
+    const paymentStatus = selectedPaymentMethod === 'BANK_TRANSFER' ? 'PAID' : 'PENDING';
 
     const stockUpdates = Object.entries(quantityByProductId).map(
       ([productId, quantity]) => ({
@@ -157,10 +189,14 @@ const createOrder = async (req, res, next) => {
       order = await Order.create({
         userId: req.user._id,
         items: normalizedItems,
+        shippingFee,
         totalAmount,
         shippingAddress: shippingAddress.trim(),
         phone: phone.trim(),
         paymentMethod: selectedPaymentMethod,
+        paymentStatus,
+        paymentNote: normalizedPaymentNote,
+        transferReference: normalizedTransferReference,
       });
     } catch (error) {
       await Product.bulkWrite(
@@ -228,4 +264,49 @@ const updateOrderStatus = async (req, res, next) => {
   }
 };
 
-module.exports = { createOrder, getMyOrders, getAllOrders, updateOrderStatus };
+const updatePaymentStatus = async (req, res, next) => {
+  try {
+    const { paymentStatus } = req.body;
+
+    if (!ALLOWED_PAYMENT_STATUS.includes(paymentStatus)) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid payment status" });
+    }
+
+    const update = {
+      paymentStatus,
+      paymentNote:
+        paymentStatus === "PAID"
+          ? "Admin đã xác nhận thanh toán"
+          : "Đơn hàng đang chờ thanh toán",
+    };
+
+    if (paymentStatus === "PENDING") {
+      update.transferReference = "";
+    }
+
+    const order = await Order.findByIdAndUpdate(req.params.id, update, {
+      new: true,
+      runValidators: true,
+    });
+
+    if (!order) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Order not found" });
+    }
+
+    res.json({ success: true, message: "Payment status updated", data: order });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = {
+  createOrder,
+  getMyOrders,
+  getAllOrders,
+  updateOrderStatus,
+  updatePaymentStatus,
+};

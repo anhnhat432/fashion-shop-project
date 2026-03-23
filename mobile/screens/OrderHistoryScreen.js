@@ -10,6 +10,11 @@ import {
 import api from "../services/api";
 import { FONTS } from "../constants/fonts";
 
+const paymentStatusMap = {
+  PAID: 'Đã thanh toán',
+  PENDING: 'Chưa thanh toán',
+};
+
 export default function OrderHistoryScreen() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -65,6 +70,13 @@ export default function OrderHistoryScreen() {
         <View style={styles.card}>
           <Text style={styles.code}>Mã đơn: {item._id}</Text>
           <Text style={styles.status}>Trạng thái: {item.status}</Text>
+          <Text style={styles.meta}>Thanh toán: {item.paymentMethod}</Text>
+          <Text style={styles.meta}>
+            Tình trạng thanh toán: {paymentStatusMap[item.paymentStatus] || item.paymentStatus}
+          </Text>
+          {item.transferReference ? (
+            <Text style={styles.meta}>Mã chuyển khoản: {item.transferReference}</Text>
+          ) : null}
           <Text style={styles.total}>
             Tổng: {Number(item.totalAmount || 0).toLocaleString()} đ
           </Text>
@@ -92,6 +104,7 @@ const styles = StyleSheet.create({
   },
   code: { fontWeight: "700", color: "#111827", fontFamily: FONTS.bold },
   status: { marginTop: 2, color: "#374151", fontFamily: FONTS.regular },
+  meta: { marginTop: 2, color: '#6b7280', fontFamily: FONTS.regular },
   total: { marginTop: 4, fontWeight: "700", fontFamily: FONTS.bold },
   empty: {
     textAlign: "center",

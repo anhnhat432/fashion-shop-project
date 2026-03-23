@@ -16,7 +16,7 @@ export default function CategoriesPage() {
       const res = await api.get('/categories');
       setCategories(res.data.data || []);
     } catch (err) {
-      setError(err.response?.data?.message || 'Khong tai duoc danh muc');
+      setError(err.response?.data?.message || 'Không tải được danh mục');
     } finally {
       setLoading(false);
     }
@@ -28,7 +28,7 @@ export default function CategoriesPage() {
 
   const saveCategory = async () => {
     if (!name.trim() || name.trim().length < 2) {
-      setError('Ten danh muc toi thieu 2 ky tu');
+      setError('Tên danh mục tối thiểu 2 ký tự');
       return;
     }
 
@@ -43,7 +43,7 @@ export default function CategoriesPage() {
       setEditingId(null);
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Khong luu duoc danh muc');
+      setError(err.response?.data?.message || 'Không lưu được danh mục');
     }
   };
 
@@ -52,7 +52,7 @@ export default function CategoriesPage() {
       await api.delete(`/categories/${id}`);
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Khong xoa duoc danh muc');
+      setError(err.response?.data?.message || 'Không xóa được danh mục');
     }
   };
 
@@ -65,11 +65,11 @@ export default function CategoriesPage() {
   return (
     <Layout>
       <h1>Categories</h1>
-      <p className="helper">Danh muc nen ngan gon, de loc san pham.</p>
+      <p className="helper">Danh mục nên ngắn gọn, dễ lọc sản phẩm.</p>
 
       <section className="form-card category-form-card">
         <div className="form-card-head">
-          <h3>{editingId ? 'Cap nhat danh muc' : 'Them danh muc moi'}</h3>
+          <h3>{editingId ? 'Cập nhật danh mục' : 'Thêm danh mục mới'}</h3>
         </div>
 
         <div className="category-form-row">
@@ -77,29 +77,29 @@ export default function CategoriesPage() {
             className="category-name-input"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Ten danh muc"
+            placeholder="Tên danh mục"
           />
-          <button className="btn-primary" onClick={saveCategory}>{editingId ? 'Cap nhat' : 'Them'}</button>
-          {editingId ? <button className="btn-ghost" onClick={() => { setEditingId(null); setName(''); }}>Huy</button> : null}
+          <button className="btn-primary" onClick={saveCategory}>{editingId ? 'Cập nhật' : 'Thêm'}</button>
+          {editingId ? <button className="btn-ghost" onClick={() => { setEditingId(null); setName(''); }}>Hủy</button> : null}
         </div>
       </section>
 
-      {loading ? <p className="page-card">Dang tai danh muc...</p> : null}
+      {loading ? <p className="page-card">Đang tải danh mục...</p> : null}
       {error ? <p className="error">{error}</p> : null}
 
-      {!loading && !categories.length ? <p className="page-card">Chua co danh muc nao</p> : null}
+      {!loading && !categories.length ? <p className="page-card">Chưa có danh mục nào</p> : null}
 
       {!!categories.length && (
         <section className="page-card category-list-card">
-          <h3 className="category-list-title">Danh sach danh muc</h3>
+          <h3 className="category-list-title">Danh sách danh mục</h3>
 
           <div className="category-list">
             {categories.map((c) => (
               <div key={c._id} className="category-row">
                 <span className="category-name">{c.name}</span>
                 <div className="row-actions">
-                  <button className="btn-edit" onClick={() => startEdit(c)}>Sua</button>
-                  <button className="btn-delete" onClick={() => removeCategory(c._id)}>Xoa</button>
+                  <button className="btn-edit" onClick={() => startEdit(c)}>Sửa</button>
+                  <button className="btn-delete" onClick={() => removeCategory(c._id)}>Xóa</button>
                 </div>
               </div>
             ))}

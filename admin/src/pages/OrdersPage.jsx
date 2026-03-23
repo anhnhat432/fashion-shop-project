@@ -25,7 +25,7 @@ export default function OrdersPage() {
       const res = await api.get('/orders');
       setOrders(res.data.data || []);
     } catch (err) {
-      setError(err.response?.data?.message || 'Khong tai duoc danh sach don hang');
+      setError(err.response?.data?.message || 'Không tải được danh sách đơn hàng');
     } finally {
       setLoading(false);
     }
@@ -41,7 +41,7 @@ export default function OrdersPage() {
       await api.put(`/orders/${id}/status`, { status });
       fetchOrders();
     } catch (err) {
-      setError(err.response?.data?.message || 'Khong cap nhat duoc trang thai don');
+      setError(err.response?.data?.message || 'Không cập nhật được trạng thái đơn');
     } finally {
       setUpdatingId('');
     }
@@ -50,24 +50,24 @@ export default function OrdersPage() {
   return (
     <Layout>
       <h1>Orders</h1>
-      <p className="helper">Cap nhat trang thai don ngay tren bang.</p>
+      <p className="helper">Cập nhật trạng thái đơn ngay trên bảng.</p>
 
-      {loading ? <p className="page-card">Dang tai don hang...</p> : null}
+      {loading ? <p className="page-card">Đang tải đơn hàng...</p> : null}
       {error ? <p className="error">{error}</p> : null}
-      {!loading && !orders.length ? <p className="page-card">Chua co don hang nao</p> : null}
+      {!loading && !orders.length ? <p className="page-card">Chưa có đơn hàng nào</p> : null}
 
       {!!orders.length && (
         <div className="page-card table-wrap">
           <table className="orders-table">
             <thead>
-              <tr><th>Order ID</th><th>Khach hang</th><th>Tong tien</th><th>Trang thai</th><th>Cap nhat</th></tr>
+              <tr><th>Order ID</th><th>Khách hàng</th><th>Tổng tiền</th><th>Trạng thái</th><th>Cập nhật</th></tr>
             </thead>
             <tbody>
               {orders.map((o, idx) => (
                 <tr key={o._id}>
                   <td className="order-id-cell">#{String(idx + 1).padStart(3, '0')}</td>
                   <td>{o.userId?.name || 'N/A'}</td>
-                  <td className="order-total-cell">{Number(o.totalAmount || 0).toLocaleString()} d</td>
+                  <td className="order-total-cell">{Number(o.totalAmount || 0).toLocaleString()} đ</td>
                   <td><span className={`status-badge ${statusClassMap[o.status] || ''}`}>{o.status}</span></td>
                   <td>
                     <select

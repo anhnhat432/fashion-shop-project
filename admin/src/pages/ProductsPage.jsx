@@ -11,9 +11,9 @@ const getStockBadgeClass = (stock) => {
 };
 
 const getStockLabel = (stock) => {
-  if (stock <= 5) return 'Sap het';
-  if (stock <= 20) return 'Vua';
-  return 'Con nhieu';
+  if (stock <= 5) return 'Sắp hết';
+  if (stock <= 20) return 'Vừa';
+  return 'Còn nhiều';
 };
 
 export default function ProductsPage() {
@@ -34,7 +34,7 @@ export default function ProductsPage() {
       setProducts(pRes.data.data || []);
       setCategories(cRes.data.data || []);
     } catch (err) {
-      setError(err.response?.data?.message || 'Khong tai duoc du lieu san pham');
+      setError(err.response?.data?.message || 'Không tải được dữ liệu sản phẩm');
     } finally {
       setLoading(false);
     }
@@ -68,23 +68,23 @@ export default function ProductsPage() {
     };
 
     if (!payload.name || payload.name.length < 2) {
-      setError('Ten san pham toi thieu 2 ky tu');
+      setError('Tên sản phẩm tối thiểu 2 ký tự');
       return;
     }
     if (Number.isNaN(payload.price) || payload.price <= 0) {
-      setError('Gia san pham phai > 0');
+      setError('Giá sản phẩm phải > 0');
       return;
     }
     if (Number.isNaN(payload.stock) || payload.stock < 0) {
-      setError('Ton kho phai >= 0');
+      setError('Tồn kho phải >= 0');
       return;
     }
     if (!payload.categoryId) {
-      setError('Vui long chon danh muc');
+      setError('Vui lòng chọn danh mục');
       return;
     }
     if (payload.image && !payload.image.startsWith('http')) {
-      setError('Anh san pham can la URL bat dau bang http');
+      setError('Ảnh sản phẩm cần là URL bắt đầu bằng http');
       return;
     }
 
@@ -100,7 +100,7 @@ export default function ProductsPage() {
       setEditingId(null);
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Khong luu duoc san pham');
+      setError(err.response?.data?.message || 'Không lưu được sản phẩm');
     } finally {
       setSaving(false);
     }
@@ -111,7 +111,7 @@ export default function ProductsPage() {
       await api.delete(`/products/${id}`);
       fetchData();
     } catch (err) {
-      setError(err.response?.data?.message || 'Khong xoa duoc san pham');
+      setError(err.response?.data?.message || 'Không xóa được sản phẩm');
     }
   };
 
@@ -132,24 +132,24 @@ export default function ProductsPage() {
   return (
     <Layout>
       <h1>Products</h1>
-      <p className="helper">Quan ly san pham nhanh cho demo mon hoc.</p>
+      <p className="helper">Quản lý sản phẩm nhanh cho demo môn học.</p>
 
       <section className="form-card">
         <div className="form-card-head">
-          <h3>{editingId ? 'Cap nhat san pham' : 'Them san pham moi'}</h3>
-          <p className="helper">Nhap thong tin co ban va luu nhanh.</p>
+          <h3>{editingId ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm mới'}</h3>
+          <p className="helper">Nhập thông tin cơ bản và lưu nhanh.</p>
         </div>
 
         <div className="grid-form">
-          <input placeholder="Ten" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
-          <input placeholder="Gia" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
-          <input placeholder="Mo ta" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
+          <input placeholder="Tên" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
+          <input placeholder="Giá" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+          <input placeholder="Mô tả" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           <input placeholder="Image URL" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} />
           <input placeholder="Sizes (S,M,L)" value={form.sizes} onChange={(e) => setForm({ ...form, sizes: e.target.value })} />
-          <input placeholder="Colors (Do,Xanh)" value={form.colors} onChange={(e) => setForm({ ...form, colors: e.target.value })} />
-          <input placeholder="Ton kho" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
+          <input placeholder="Colors (Đỏ,Xanh)" value={form.colors} onChange={(e) => setForm({ ...form, colors: e.target.value })} />
+          <input placeholder="Tồn kho" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
           <select value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })}>
-            <option value="">-- Chon danh muc --</option>
+            <option value="">-- Chọn danh mục --</option>
             {categories.map((c) => (
               <option key={c._id} value={c._id}>{c.name}</option>
             ))}
@@ -158,37 +158,37 @@ export default function ProductsPage() {
 
         <div className="form-actions">
           <button className="btn-primary" onClick={saveProduct} disabled={saving}>
-            {saving ? 'Dang luu...' : editingId ? 'Cap nhat san pham' : 'Them san pham'}
+            {saving ? 'Đang lưu...' : editingId ? 'Cập nhật sản phẩm' : 'Thêm sản phẩm'}
           </button>
-          {editingId ? <button className="btn-ghost" onClick={() => { setEditingId(null); setForm(initial); }}>Huy sua</button> : null}
+          {editingId ? <button className="btn-ghost" onClick={() => { setEditingId(null); setForm(initial); }}>Hủy sửa</button> : null}
         </div>
       </section>
 
-      {loading ? <p className="page-card">Dang tai du lieu...</p> : null}
+      {loading ? <p className="page-card">Đang tải dữ liệu...</p> : null}
       {error ? <p className="error">{error}</p> : null}
 
       <div className="table-toolbar">
         <input
           className="search-input"
-          placeholder="Tim theo ten san pham hoac danh muc"
+          placeholder="Tìm theo tên sản phẩm hoặc danh mục"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
-      {!loading && !filteredProducts.length ? <p className="page-card">Chua co san pham nao</p> : null}
+      {!loading && !filteredProducts.length ? <p className="page-card">Chưa có sản phẩm nào</p> : null}
 
       {!!filteredProducts.length && (
         <div className="page-card table-wrap">
           <table className="products-table">
             <thead>
-              <tr><th>Ten</th><th>Gia</th><th>Ton kho</th><th>Danh muc</th><th>Hanh dong</th></tr>
+              <tr><th>Tên</th><th>Giá</th><th>Tồn kho</th><th>Danh mục</th><th>Hành động</th></tr>
             </thead>
             <tbody>
               {filteredProducts.map((p) => (
                 <tr key={p._id}>
                   <td className="product-name-cell">{p.name}</td>
-                  <td className="price-cell">{Number(p.price).toLocaleString()} d</td>
+                  <td className="price-cell">{Number(p.price).toLocaleString()} đ</td>
                   <td>
                     <div className="stock-cell">
                       <strong>{p.stock}</strong>
@@ -198,8 +198,8 @@ export default function ProductsPage() {
                   <td>{p.categoryId?.name}</td>
                   <td>
                     <div className="row-actions">
-                      <button className="btn-edit" onClick={() => startEdit(p)}>Sua</button>
-                      <button className="btn-delete" onClick={() => removeProduct(p._id)}>Xoa</button>
+                      <button className="btn-edit" onClick={() => startEdit(p)}>Sửa</button>
+                      <button className="btn-delete" onClick={() => removeProduct(p._id)}>Xóa</button>
                     </div>
                   </td>
                 </tr>

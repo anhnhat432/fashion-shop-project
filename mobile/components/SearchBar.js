@@ -1,6 +1,7 @@
-import React from 'react';
-import { Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import React from "react";
+import { Pressable, StyleSheet, Text, TextInput, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { FONTS } from "../constants/fonts";
 
 export default function SearchBar({ value, onChangeText, onSearch }) {
   return (
@@ -10,12 +11,12 @@ export default function SearchBar({ value, onChangeText, onSearch }) {
         style={styles.input}
         value={value}
         onChangeText={onChangeText}
-        placeholder="Tim san pham"
+        placeholder="Tìm sản phẩm"
         returnKeyType="search"
         onSubmitEditing={onSearch}
       />
       <Pressable style={styles.button} onPress={onSearch}>
-        <Text style={styles.buttonText}>Tim</Text>
+        <Text style={styles.buttonText}>Tìm</Text>
       </Pressable>
     </View>
   );
@@ -23,25 +24,32 @@ export default function SearchBar({ value, onChangeText, onSearch }) {
 
 const styles = StyleSheet.create({
   wrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#fff',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
     borderRadius: 14,
     paddingHorizontal: 10,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
-    shadowColor: '#000',
+    borderColor: "#e5e7eb",
+    shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
-    elevation: 2
+    elevation: 2,
   },
-  input: { flex: 1, paddingVertical: 10, paddingHorizontal: 8, fontSize: 15, color: '#111827' },
+  input: {
+    flex: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    fontSize: 15,
+    color: "#111827",
+    fontFamily: FONTS.regular,
+  },
   button: {
-    backgroundColor: '#111827',
+    backgroundColor: "#111827",
     borderRadius: 10,
     paddingHorizontal: 14,
-    paddingVertical: 8
+    paddingVertical: 8,
   },
-  buttonText: { color: '#fff', fontWeight: '700' }
+  buttonText: { color: "#fff", fontWeight: "700", fontFamily: FONTS.bold },
 });

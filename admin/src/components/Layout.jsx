@@ -16,7 +16,7 @@ export default function Layout({ children }) {
       <aside className="sidebar">
         <div className="sidebar-head">
           <h2>Fashion Admin</h2>
-          <p className="helper">Quan ly nhanh cho demo mon hoc</p>
+          <p className="helper">Quản lý nhanh cho demo môn học</p>
         </div>
 
         <nav className="sidebar-nav">
@@ -28,7 +28,7 @@ export default function Layout({ children }) {
           ))}
         </nav>
 
-        <button className="logout-btn" onClick={logout}>Logout</button>
+        <button className="logout-btn" onClick={logout}>Đăng xuất</button>
       </aside>
       <main className="content">{children}</main>
     </div>

@@ -5,7 +5,10 @@ import { FONTS } from "../constants/fonts";
 export default function CategoryList({ categories, selectedId, onSelect }) {
   return (
     <View>
-      <Text style={styles.title}>Danh mục</Text>
+      <View style={styles.headRow}>
+        <Text style={styles.title}>Danh mục theo mood</Text>
+        <Text style={styles.count}>{categories.length - 1} nhóm</Text>
+      </View>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
@@ -31,23 +34,34 @@ export default function CategoryList({ categories, selectedId, onSelect }) {
 }
 
 const styles = StyleSheet.create({
+  headRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+  },
   title: {
-    fontSize: 14,
-    color: "#6b7280",
-    fontWeight: "600",
-    marginBottom: 8,
+    fontSize: 15,
+    color: "#111827",
     fontFamily: FONTS.medium,
   },
-  list: { paddingRight: 6, gap: 8 },
+  count: {
+    color: "#9ca3af",
+    fontSize: 12,
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+    fontFamily: FONTS.medium,
+  },
+  list: { paddingRight: 6, gap: 10 },
   chip: {
-    backgroundColor: "#fff",
+    backgroundColor: "#fff8f1",
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: "#eeded0",
     borderRadius: 999,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
   },
   chipActive: { backgroundColor: "#111827", borderColor: "#111827" },
-  chipText: { color: "#374151", fontWeight: "600", fontFamily: FONTS.medium },
+  chipText: { color: "#7c2d12", fontWeight: "600", fontFamily: FONTS.medium },
   chipTextActive: { color: "#fff" },
 });

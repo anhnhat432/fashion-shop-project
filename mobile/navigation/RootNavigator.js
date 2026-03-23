@@ -4,12 +4,11 @@ import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { useAuth } from "../context/AuthContext";
 import LoginScreen from "../screens/LoginScreen";
 import RegisterScreen from "../screens/RegisterScreen";
-import HomeScreen from "../screens/HomeScreen";
+import AppTabs from "./AppTabs";
 import ProductDetailScreen from "../screens/ProductDetailScreen";
-import CartScreen from "../screens/CartScreen";
 import CheckoutScreen from "../screens/CheckoutScreen";
 import OrderHistoryScreen from "../screens/OrderHistoryScreen";
-import ProfileScreen from "../screens/ProfileScreen";
+import { FONTS } from "../constants/fonts";
 
 const Stack = createNativeStackNavigator();
 
@@ -33,7 +32,20 @@ export default function RootNavigator() {
   }
 
   return (
-    <Stack.Navigator screenOptions={{ animation: "slide_from_right" }}>
+    <Stack.Navigator
+      screenOptions={{
+        animation: "slide_from_right",
+        headerShadowVisible: false,
+        headerStyle: { backgroundColor: "#f8efe6" },
+        headerTitleStyle: {
+          fontFamily: FONTS.bold,
+          fontSize: 18,
+          color: "#111827",
+        },
+        headerTintColor: "#111827",
+        contentStyle: { backgroundColor: "#f3f5f7" },
+      }}
+    >
       {!user ? (
         <>
           <Stack.Screen
@@ -50,19 +62,14 @@ export default function RootNavigator() {
       ) : (
         <>
           <Stack.Screen
-            name="Home"
-            component={HomeScreen}
-            options={{ title: "Fashion Shop" }}
+            name="MainTabs"
+            component={AppTabs}
+            options={{ headerShown: false }}
           />
           <Stack.Screen
             name="ProductDetail"
             component={ProductDetailScreen}
             options={{ title: "Chi tiết sản phẩm" }}
-          />
-          <Stack.Screen
-            name="Cart"
-            component={CartScreen}
-            options={{ title: "Giỏ hàng" }}
           />
           <Stack.Screen
             name="Checkout"
@@ -73,11 +80,6 @@ export default function RootNavigator() {
             name="OrderHistory"
             component={OrderHistoryScreen}
             options={{ title: "Lịch sử đơn hàng" }}
-          />
-          <Stack.Screen
-            name="Profile"
-            component={ProfileScreen}
-            options={{ title: "Tài khoản" }}
           />
         </>
       )}

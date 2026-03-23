@@ -3,11 +3,13 @@ import {
   ActivityIndicator,
   Alert,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../context/AuthContext";
 import { FONTS } from "../constants/fonts";
 
@@ -50,26 +52,42 @@ export default function RegisterScreen() {
     }
   };
 
+  const fields = [
+    { key: "name", label: "Họ tên", icon: "person-outline" },
+    { key: "email", label: "Email", icon: "mail-outline", keyboardType: "email-address" },
+    { key: "password", label: "Mật khẩu", icon: "lock-closed-outline", secureTextEntry: true },
+    { key: "phone", label: "Số điện thoại", icon: "call-outline", keyboardType: "phone-pad" },
+    { key: "address", label: "Địa chỉ", icon: "location-outline" },
+  ];
+
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <View style={styles.heroCard}>
+        <Text style={styles.heroEyebrow}>Join the edit</Text>
+        <Text style={styles.title}>Tạo tài khoản mới</Text>
+        <Text style={styles.subtitle}>
+          Lưu thông tin mua sắm, theo dõi đơn hàng và checkout nhanh hơn cho những lần sau.
+        </Text>
+      </View>
+
       <View style={styles.card}>
-        <Text style={styles.title}>Tạo tài khoản</Text>
-        {[
-          { key: "name", label: "Họ tên" },
-          { key: "email", label: "Email" },
-          { key: "password", label: "Mật khẩu" },
-          { key: "phone", label: "Số điện thoại" },
-          { key: "address", label: "Địa chỉ" },
-        ].map((item) => (
-          <TextInput
-            key={item.key}
-            style={styles.input}
-            placeholder={item.label}
-            secureTextEntry={item.key === "password"}
-            value={form[item.key]}
-            onChangeText={(v) => setForm({ ...form, [item.key]: v })}
-            autoCapitalize="none"
-          />
+        {fields.map((item) => (
+          <View key={item.key} style={styles.fieldWrap}>
+            <Text style={styles.fieldLabel}>{item.label}</Text>
+            <View style={styles.inputShell}>
+              <Ionicons name={item.icon} size={18} color="#9a3412" />
+              <TextInput
+                style={styles.input}
+                placeholder={item.label}
+                placeholderTextColor="#9ca3af"
+                secureTextEntry={item.secureTextEntry}
+                value={form[item.key]}
+                onChangeText={(v) => setForm({ ...form, [item.key]: v })}
+                autoCapitalize={item.key === "email" ? "none" : "sentences"}
+                keyboardType={item.keyboardType}
+              />
+            </View>
+          </View>
         ))}
         <Pressable
           style={[styles.primaryBtn, loading && styles.disabled]}
@@ -79,51 +97,88 @@ export default function RegisterScreen() {
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.primaryBtnText}>Tạo tài khoản</Text>
+            <>
+              <Text style={styles.primaryBtnText}>Tạo tài khoản</Text>
+              <Ionicons name="sparkles-outline" size={16} color="#fff" />
+            </>
           )}
         </Pressable>
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: "center",
-    padding: 16,
     backgroundColor: "#f3f5f7",
+  },
+  content: {
+    padding: 16,
+    gap: 14,
+    paddingBottom: 28,
+  },
+  heroCard: {
+    backgroundColor: "#f8e7d7",
+    borderRadius: 28,
+    padding: 22,
+    gap: 10,
+  },
+  heroEyebrow: {
+    color: "#9a3412",
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+    fontSize: 11,
+    fontFamily: FONTS.bold,
   },
   card: {
     backgroundColor: "#fff",
-    borderRadius: 14,
-    padding: 16,
-    gap: 10,
+    borderRadius: 24,
+    padding: 18,
+    gap: 14,
     shadowColor: "#000",
     shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 3,
   },
   title: {
-    fontSize: 24,
-    fontWeight: "700",
-    textAlign: "center",
-    marginBottom: 6,
+    fontSize: 30,
+    color: "#111827",
     fontFamily: FONTS.bold,
   },
-  input: {
+  subtitle: { color: "#6b7280", lineHeight: 20, fontFamily: FONTS.regular },
+  fieldWrap: { gap: 8 },
+  fieldLabel: {
+    color: "#111827",
+    textTransform: "uppercase",
+    letterSpacing: 0.7,
+    fontSize: 12,
+    fontFamily: FONTS.medium,
+  },
+  inputShell: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
     borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 10,
-    padding: 12,
+    borderColor: "#e5e7eb",
+    borderRadius: 16,
+    paddingHorizontal: 12,
     backgroundColor: "#fafafa",
+  },
+  input: {
+    flex: 1,
+    paddingVertical: 14,
+    color: "#111827",
     fontFamily: FONTS.regular,
   },
   primaryBtn: {
     backgroundColor: "#111827",
-    borderRadius: 10,
-    padding: 12,
+    borderRadius: 16,
+    padding: 14,
     alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
     marginTop: 4,
   },
   primaryBtnText: { color: "#fff", fontWeight: "700", fontFamily: FONTS.bold },

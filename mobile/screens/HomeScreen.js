@@ -91,6 +91,10 @@ export default function HomeScreen({ navigation }) {
 
   const featuredProducts = useMemo(() => products.slice(0, 3), [products]);
 
+  const openProductDetail = (productId) => {
+    navigation.getParent()?.navigate("ProductDetail", { productId });
+  };
+
   const renderHeader = () => (
     <View style={styles.headerWrap}>
       <View style={styles.heroCard}>
@@ -177,9 +181,7 @@ export default function HomeScreen({ navigation }) {
               <Pressable
                 key={item._id}
                 style={styles.featuredCard}
-                onPress={() =>
-                  navigation.navigate("ProductDetail", { productId: item._id })
-                }
+                onPress={() => openProductDetail(item._id)}
               >
                 <Text style={styles.featuredEyebrow}>
                   #{String(index + 1).padStart(2, "0")}
@@ -235,9 +237,7 @@ export default function HomeScreen({ navigation }) {
           renderItem={({ item }) => (
             <ProductCard
               product={item}
-              onPress={() =>
-                navigation.navigate("ProductDetail", { productId: item._id })
-              }
+              onPress={() => openProductDetail(item._id)}
             />
           )}
         />

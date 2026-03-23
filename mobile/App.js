@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { Text, TextInput } from "react-native";
 import { NavigationContainer } from "@react-navigation/native";
 import {
@@ -11,6 +11,7 @@ import * as SplashScreen from "expo-splash-screen";
 import RootNavigator from "./navigation/RootNavigator";
 import { AuthProvider } from "./context/AuthContext";
 import { CartProvider } from "./context/CartContext";
+import { WishlistProvider } from "./context/WishlistContext";
 
 // Apply Roboto globally so all Text/TextInput without an explicit style
 // automatically use Vietnamese-capable Roboto.
@@ -21,36 +22,50 @@ Text.defaultProps.style = [
 ];
 
 if (!TextInput.defaultProps) TextInput.defaultProps = {};
+TextInput.defaultProps = {
+  ...TextInput.defaultProps,
+  disableFullscreenUI: true,
+};
+
 TextInput.defaultProps.style = [
   { fontFamily: "Roboto_400Regular" },
   TextInput.defaultProps.style,
 ];
 
-SplashScreen.preventAutoHideAsync();
-
 export default function App() {
-  const [fontsLoaded] = useFonts({
+  const [appReady, setAppReady] = useState(false);
+  const [fontsLoaded, fontError] = useFonts({
     Roboto_400Regular,
     Roboto_500Medium,
     Roboto_700Bold,
   });
 
-  const onReady = useCallback(async () => {
-    if (fontsLoaded) {
-      await SplashScreen.hideAsync();
-    }
-  }, [fontsLoaded]);
+  useEffect(() => {
+    SplashScreen.preventAutoHideAsync().catch(() => {
+      // Ignore repeated or unsupported splash calls on some Android builds.
+    });
+  }, []);
 
-  // Keep splash screen until fonts are ready
-  if (!fontsLoaded) return null;
+  useEffect(() => {
+    if (!fontsLoaded && !fontError) return;
+
+    setAppReady(true);
+    SplashScreen.hideAsync().catch(() => {
+      // Ignore hide failures so the app can continue rendering.
+    });
+  }, [fontError, fontsLoaded]);
+
+  if (!appReady) return null;
 
   return (
     <AuthProvider>
-      <CartProvider>
-        <NavigationContainer onReady={onReady}>
-          <RootNavigator />
-        </NavigationContainer>
-      </CartProvider>
+      <WishlistProvider>
+        <CartProvider>
+          <NavigationContainer>
+            <RootNavigator />
+          </NavigationContainer>
+        </CartProvider>
+      </WishlistProvider>
     </AuthProvider>
   );
 }

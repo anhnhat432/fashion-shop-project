@@ -4,6 +4,13 @@ import api from '../services/api';
 
 const statuses = ['PENDING', 'CONFIRMED', 'SHIPPING', 'DELIVERED', 'CANCELLED'];
 const paymentStatuses = ['ALL', 'PENDING', 'PAID'];
+const allowedStatusTransitions = {
+  PENDING: ['PENDING', 'CONFIRMED', 'CANCELLED'],
+  CONFIRMED: ['CONFIRMED', 'SHIPPING', 'CANCELLED'],
+  SHIPPING: ['SHIPPING', 'DELIVERED', 'CANCELLED'],
+  DELIVERED: ['DELIVERED'],
+  CANCELLED: ['CANCELLED']
+};
 
 const statusClassMap = {
   PENDING: 'status-pending',
@@ -72,6 +79,8 @@ export default function OrdersPage() {
     return (order.paymentStatus || 'PENDING') === paymentFilter;
   });
 
+  const getStatusOptions = (currentStatus) => allowedStatusTransitions[currentStatus] || statuses;
+
   return (
     <Layout>
       <h1>Orders</h1>
@@ -138,7 +147,7 @@ export default function OrdersPage() {
                       onChange={(e) => updateStatus(o._id, e.target.value)}
                       disabled={updatingId === o._id}
                     >
-                      {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
+                      {getStatusOptions(o.status).map((s) => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </td>
                 </tr>

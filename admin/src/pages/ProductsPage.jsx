@@ -2,7 +2,25 @@ import { useEffect, useMemo, useState } from 'react';
 import Layout from '../components/Layout';
 import api from '../services/api';
 
-const initial = { name: '', price: '', description: '', image: '', sizes: '', colors: '', stock: '', categoryId: '' };
+const initial = { name: '', price: '', salePrice: '', description: '', image: '', sizes: '', colors: '', stock: '', variants: '', categoryId: '' };
+
+const parseVariants = (value) =>
+  value
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [size, color, stock] = line.split('|').map((item) => item?.trim());
+      return {
+        size,
+        color,
+        stock: Number(stock),
+      };
+    })
+    .filter((item) => item.size && item.color && !Number.isNaN(item.stock) && item.stock >= 0);
+
+const formatVariants = (variants = []) =>
+  variants.map((item) => `${item.size}|${item.color}|${item.stock}`).join('\n');
 
 const getStockBadgeClass = (stock) => {
   if (stock <= 5) return 'stock-badge low';
@@ -62,9 +80,11 @@ export default function ProductsPage() {
       description: form.description.trim(),
       image: form.image.trim(),
       price: Number(form.price),
+      salePrice: form.salePrice ? Number(form.salePrice) : null,
       stock: Number(form.stock || 0),
       sizes: form.sizes ? form.sizes.split(',').map((x) => x.trim()).filter(Boolean) : [],
-      colors: form.colors ? form.colors.split(',').map((x) => x.trim()).filter(Boolean) : []
+      colors: form.colors ? form.colors.split(',').map((x) => x.trim()).filter(Boolean) : [],
+      variants: form.variants ? parseVariants(form.variants) : []
     };
 
     if (!payload.name || payload.name.length < 2) {
@@ -73,6 +93,10 @@ export default function ProductsPage() {
     }
     if (Number.isNaN(payload.price) || payload.price <= 0) {
       setError('Giá sản phẩm phải > 0');
+      return;
+    }
+    if (payload.salePrice !== null && (Number.isNaN(payload.salePrice) || payload.salePrice <= 0 || payload.salePrice >= payload.price)) {
+      setError('Giá sale phải > 0 và nhỏ hơn giá gốc');
       return;
     }
     if (Number.isNaN(payload.stock) || payload.stock < 0) {
@@ -86,6 +110,14 @@ export default function ProductsPage() {
     if (payload.image && !payload.image.startsWith('http')) {
       setError('Ảnh sản phẩm cần là URL bắt đầu bằng http');
       return;
+    }
+    if (form.variants.trim() && !payload.variants.length) {
+      setError('Biến thể phải theo định dạng size|màu|stock, mỗi dòng một biến thể');
+      return;
+    }
+
+    if (payload.variants.length) {
+      payload.stock = payload.variants.reduce((sum, item) => sum + Number(item.stock || 0), 0);
     }
 
     setSaving(true);
@@ -120,11 +152,13 @@ export default function ProductsPage() {
     setForm({
       name: product.name || '',
       price: String(product.price ?? ''),
+      salePrice: product.salePrice ? String(product.salePrice) : '',
       description: product.description || '',
       image: product.image || '',
       sizes: Array.isArray(product.sizes) ? product.sizes.join(', ') : '',
       colors: Array.isArray(product.colors) ? product.colors.join(', ') : '',
       stock: String(product.stock ?? 0),
+      variants: formatVariants(product.variants || []),
       categoryId: product.categoryId?._id || product.categoryId || ''
     });
   };
@@ -143,6 +177,7 @@ export default function ProductsPage() {
         <div className="grid-form">
           <input placeholder="Tên" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           <input placeholder="Giá" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
+          <input placeholder="Giá sale" value={form.salePrice} onChange={(e) => setForm({ ...form, salePrice: e.target.value })} />
           <input placeholder="Mô tả" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           <input placeholder="Image URL" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} />
           <input placeholder="Sizes (S,M,L)" value={form.sizes} onChange={(e) => setForm({ ...form, sizes: e.target.value })} />
@@ -154,6 +189,12 @@ export default function ProductsPage() {
               <option key={c._id} value={c._id}>{c.name}</option>
             ))}
           </select>
+          <textarea
+            placeholder="Biến thể: size|màu|stock, mỗi dòng một biến thể"
+            value={form.variants}
+            onChange={(e) => setForm({ ...form, variants: e.target.value })}
+            rows={5}
+          />
         </div>
 
         <div className="form-actions">
@@ -188,7 +229,9 @@ export default function ProductsPage() {
               {filteredProducts.map((p) => (
                 <tr key={p._id}>
                   <td className="product-name-cell">{p.name}</td>
-                  <td className="price-cell">{Number(p.price).toLocaleString()} đ</td>
+                  <td className="price-cell">
+                    {p.salePrice ? `${Number(p.salePrice).toLocaleString()} đ` : `${Number(p.price).toLocaleString()} đ`}
+                  </td>
                   <td>
                     <div className="stock-cell">
                       <strong>{p.stock}</strong>

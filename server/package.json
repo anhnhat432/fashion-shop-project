@@ -5,7 +5,11 @@
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js",
-    "seed": "node scripts/seed.js"
+    "seed": "node scripts/seed.js",
+    "seed:vouchers": "node scripts/seedVouchers.js",
+    "test:voucher-archive": "node scripts/testVoucherArchive.js",
+    "test:voucher-validation": "node scripts/testVoucherValidation.js",
+    "test:voucher-full-checkout": "node scripts/testVoucherFullCheckout.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

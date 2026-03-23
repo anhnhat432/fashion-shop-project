@@ -17,16 +17,26 @@ import ProductCard from "../components/ProductCard";
 import SkeletonBlock from "../components/SkeletonBlock";
 import { FONTS } from "../constants/fonts";
 import { useCart } from "../context/CartContext";
+import { useWishlist } from "../context/WishlistContext";
 
 const allCategory = { _id: "", name: "Tất cả" };
+const sortOptions = [
+  { key: "newest", label: "Mới nhất" },
+  { key: "price-asc", label: "Giá tăng" },
+  { key: "price-desc", label: "Giá giảm" },
+  { key: "name-asc", label: "A-Z" },
+];
 
 export default function HomeScreen({ navigation }) {
   const { cartCount } = useCart();
+  const { wishlistCount } = useWishlist();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([allCategory]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
+  const [sortKey, setSortKey] = useState("newest");
+  const [inStockOnly, setInStockOnly] = useState(false);
   const [error, setError] = useState("");
   const revealAnim = useRef(new Animated.Value(0)).current;
 
@@ -42,12 +52,15 @@ export default function HomeScreen({ navigation }) {
   const fetchProducts = async (
     nextSearch = search,
     nextCategoryId = selectedCategoryId,
+    nextSortKey = sortKey,
+    nextInStockOnly = inStockOnly,
   ) => {
     setLoading(true);
     setError("");
     try {
-      const params = { search: nextSearch.trim() };
+      const params = { search: nextSearch.trim(), sort: nextSortKey };
       if (nextCategoryId) params.categoryId = nextCategoryId;
+      if (nextInStockOnly) params.inStock = true;
       const res = await api.get("/products", { params });
       setProducts(res.data.data || []);
     } catch (err) {
@@ -60,7 +73,7 @@ export default function HomeScreen({ navigation }) {
 
   useEffect(() => {
     fetchCategories();
-    fetchProducts("", "");
+    fetchProducts("", "", "newest", false);
   }, []);
 
   useEffect(() => {
@@ -75,12 +88,23 @@ export default function HomeScreen({ navigation }) {
   }, [loading, revealAnim]);
 
   const onSearch = () => {
-    fetchProducts(search, selectedCategoryId);
+    fetchProducts(search, selectedCategoryId, sortKey, inStockOnly);
   };
 
   const onSelectCategory = (categoryId) => {
     setSelectedCategoryId(categoryId);
-    fetchProducts(search, categoryId);
+    fetchProducts(search, categoryId, sortKey, inStockOnly);
+  };
+
+  const onSelectSort = (nextSortKey) => {
+    setSortKey(nextSortKey);
+    fetchProducts(search, selectedCategoryId, nextSortKey, inStockOnly);
+  };
+
+  const onToggleStock = () => {
+    const nextInStockOnly = !inStockOnly;
+    setInStockOnly(nextInStockOnly);
+    fetchProducts(search, selectedCategoryId, sortKey, nextInStockOnly);
   };
 
   const emptyText = useMemo(() => {
@@ -104,6 +128,18 @@ export default function HomeScreen({ navigation }) {
   );
 
   const featuredProducts = useMemo(() => products.slice(0, 3), [products]);
+  const reviewedCount = useMemo(
+    () => products.filter((item) => Number(item.reviewCount || 0) > 0).length,
+    [products],
+  );
+  const topRatedProduct = useMemo(() => {
+    return (
+      [...products].sort(
+        (left, right) =>
+          Number(right.averageRating || 0) - Number(left.averageRating || 0),
+      )[0] || null
+    );
+  }, [products]);
 
   const openProductDetail = (productId) => {
     navigation.getParent()?.navigate("ProductDetail", { productId });
@@ -153,6 +189,53 @@ export default function HomeScreen({ navigation }) {
         onSelect={onSelectCategory}
       />
 
+      <View style={styles.filtersWrap}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.sortList}
+        >
+          {sortOptions.map((option) => {
+            const active = option.key === sortKey;
+            return (
+              <Pressable
+                key={option.key}
+                style={[styles.sortChip, active && styles.sortChipActive]}
+                onPress={() => onSelectSort(option.key)}
+              >
+                <Text
+                  style={[
+                    styles.sortChipText,
+                    active && styles.sortChipTextActive,
+                  ]}
+                >
+                  {option.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+
+        <Pressable
+          style={[styles.stockToggle, inStockOnly && styles.stockToggleActive]}
+          onPress={onToggleStock}
+        >
+          <Ionicons
+            name={inStockOnly ? "checkmark-circle" : "ellipse-outline"}
+            size={16}
+            color={inStockOnly ? "#166534" : "#6b7280"}
+          />
+          <Text
+            style={[
+              styles.stockToggleText,
+              inStockOnly && styles.stockToggleTextActive,
+            ]}
+          >
+            Chỉ còn hàng
+          </Text>
+        </Pressable>
+      </View>
+
       <View style={styles.actionRow}>
         <Pressable
           style={styles.actionBtn}
@@ -166,6 +249,57 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.actionSubtext}>{cartCount} sản phẩm</Text>
           </View>
         </Pressable>
+        <Pressable
+          style={styles.actionBtn}
+          onPress={() => navigation.getParent()?.navigate("Wishlist")}
+        >
+          <View style={styles.actionIconWrap}>
+            <Ionicons name="heart-outline" size={18} color="#111827" />
+          </View>
+          <View style={styles.actionCopyWrap}>
+            <Text style={styles.actionText}>Wishlist</Text>
+            <Text style={styles.actionSubtext}>{wishlistCount} món đã lưu</Text>
+          </View>
+        </Pressable>
+      </View>
+
+      <View style={styles.signalRow}>
+        <View style={styles.signalCardDark}>
+          <Text style={styles.signalLabelLight}>Wishlist của bạn</Text>
+          <Text style={styles.signalValueLight}>{wishlistCount}</Text>
+          <Text style={styles.signalMetaLight}>
+            Lưu item muốn cân nhắc trước khi checkout
+          </Text>
+        </View>
+        <View style={styles.signalCardLight}>
+          <Text style={styles.signalLabel}>Review đang có</Text>
+          <Text style={styles.signalValue}>{reviewedCount}</Text>
+          <Text style={styles.signalMeta}>
+            Sản phẩm đã có feedback từ người mua
+          </Text>
+        </View>
+      </View>
+
+      {topRatedProduct ? (
+        <Pressable
+          style={styles.reviewSpotlight}
+          onPress={() => openProductDetail(topRatedProduct._id)}
+        >
+          <View>
+            <Text style={styles.reviewSpotlightEyebrow}>Review spotlight</Text>
+            <Text style={styles.reviewSpotlightTitle} numberOfLines={2}>
+              {topRatedProduct.name}
+            </Text>
+            <Text style={styles.reviewSpotlightMeta}>
+              ★ {Number(topRatedProduct.averageRating || 0).toFixed(1)} •{" "}
+              {Number(topRatedProduct.reviewCount || 0)} đánh giá
+            </Text>
+          </View>
+          <Ionicons name="arrow-forward" size={18} color="#111827" />
+        </Pressable>
+      ) : null}
+
+      <View style={styles.actionRow}>
         <Pressable
           style={styles.actionBtn}
           onPress={() => navigation.navigate("Profile")}
@@ -204,11 +338,16 @@ export default function HomeScreen({ navigation }) {
                   {item.name}
                 </Text>
                 <Text style={styles.featuredPrice}>
-                  {Number(item.price || 0).toLocaleString()} d
+                  {Number(item.salePrice || item.price || 0).toLocaleString()} d
                 </Text>
-                <Text style={styles.featuredMeta} numberOfLines={1}>
-                  {item.categoryId?.name || "Fashion essentials"}
-                </Text>
+                <View style={styles.featuredMetaRow}>
+                  <Text style={styles.featuredMeta} numberOfLines={1}>
+                    {item.categoryId?.name || "Fashion essentials"}
+                  </Text>
+                  <Text style={styles.featuredReview}>
+                    ★ {Number(item.averageRating || 0).toFixed(1)}
+                  </Text>
+                </View>
               </Pressable>
             ))}
           </ScrollView>
@@ -249,15 +388,15 @@ export default function HomeScreen({ navigation }) {
     <View style={styles.emptyCard}>
       <Ionicons name="search-outline" size={34} color="#9ca3af" />
       <Text style={styles.emptyTitle}>{emptyText}</Text>
-      <Text style={styles.emptyCaption}>Thử đổi từ khóa tìm kiếm hoặc chuyển sang danh mục khác.</Text>
+      <Text style={styles.emptyCaption}>
+        Thử đổi từ khóa tìm kiếm hoặc chuyển sang danh mục khác.
+      </Text>
     </View>
   );
 
   return (
     <View style={styles.container}>
-      {loading ? (
-        renderLoadingState()
-      ) : null}
+      {loading ? renderLoadingState() : null}
 
       {!loading && error ? (
         <View style={styles.errorBox}>
@@ -370,6 +509,97 @@ const styles = StyleSheet.create({
   },
   heroStatLabel: { color: "#cbd5e1", fontSize: 12, fontFamily: FONTS.regular },
   actionRow: { flexDirection: "row", gap: 8 },
+  signalRow: { flexDirection: "row", gap: 10 },
+  signalCardDark: {
+    flex: 1,
+    backgroundColor: "#111827",
+    borderRadius: 18,
+    padding: 14,
+    gap: 4,
+  },
+  signalCardLight: {
+    flex: 1,
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    padding: 14,
+    gap: 4,
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  signalLabelLight: {
+    color: "#cbd5e1",
+    fontSize: 12,
+    fontFamily: FONTS.medium,
+  },
+  signalValueLight: { color: "#fff", fontSize: 24, fontFamily: FONTS.bold },
+  signalMetaLight: {
+    color: "#d1d5db",
+    fontSize: 12,
+    fontFamily: FONTS.regular,
+  },
+  signalLabel: { color: "#6b7280", fontSize: 12, fontFamily: FONTS.medium },
+  signalValue: { color: "#111827", fontSize: 24, fontFamily: FONTS.bold },
+  signalMeta: { color: "#6b7280", fontSize: 12, fontFamily: FONTS.regular },
+  reviewSpotlight: {
+    backgroundColor: "#fff7ed",
+    borderWidth: 1,
+    borderColor: "#fdba74",
+    borderRadius: 18,
+    padding: 14,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+  },
+  reviewSpotlightEyebrow: {
+    color: "#9a3412",
+    fontSize: 11,
+    textTransform: "uppercase",
+    letterSpacing: 0.6,
+    fontFamily: FONTS.bold,
+  },
+  reviewSpotlightTitle: {
+    color: "#111827",
+    fontSize: 16,
+    fontFamily: FONTS.bold,
+    marginTop: 4,
+  },
+  reviewSpotlightMeta: {
+    color: "#9a3412",
+    marginTop: 4,
+    fontFamily: FONTS.medium,
+  },
+  filtersWrap: { gap: 10 },
+  sortList: { gap: 8, paddingRight: 8 },
+  sortChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  sortChipActive: {
+    backgroundColor: "#111827",
+    borderColor: "#111827",
+  },
+  sortChipText: { color: "#374151", fontFamily: FONTS.medium },
+  sortChipTextActive: { color: "#fff" },
+  stockToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    alignSelf: "flex-start",
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 999,
+    backgroundColor: "#fff",
+    borderWidth: 1,
+    borderColor: "#e5e7eb",
+  },
+  stockToggleActive: { backgroundColor: "#dcfce7", borderColor: "#86efac" },
+  stockToggleText: { color: "#374151", fontFamily: FONTS.medium },
+  stockToggleTextActive: { color: "#166534" },
   actionBtn: {
     flex: 1,
     backgroundColor: "#fff",
@@ -419,7 +649,13 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bold,
   },
   featuredPrice: { color: "#111827", fontSize: 18, fontFamily: FONTS.bold },
+  featuredMetaRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 8,
+  },
   featuredMeta: { color: "#9a3412", fontFamily: FONTS.medium },
+  featuredReview: { color: "#111827", fontFamily: FONTS.bold },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -481,5 +717,9 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   emptyTitle: { color: "#111827", fontSize: 18, fontFamily: FONTS.bold },
-  emptyCaption: { color: "#6b7280", textAlign: "center", fontFamily: FONTS.regular },
+  emptyCaption: {
+    color: "#6b7280",
+    textAlign: "center",
+    fontFamily: FONTS.regular,
+  },
 });

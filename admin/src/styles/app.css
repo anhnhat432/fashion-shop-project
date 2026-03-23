@@ -662,6 +662,161 @@ td {
   border-radius: 12px;
 }
 
+.voucher-form-card {
+  margin-top: 16px;
+}
+
+.voucher-grid-form {
+  align-items: center;
+}
+
+.voucher-toolbar {
+  margin-top: 14px;
+}
+
+.voucher-tabs {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.voucher-subfilters {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.voucher-tab {
+  background: #fff;
+  color: #374151;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 10px 16px;
+}
+
+.voucher-tab.is-active {
+  background: #111827;
+  color: #fff;
+}
+
+.voucher-subfilter {
+  background: #fff;
+  color: #374151;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 12px;
+}
+
+.voucher-subfilter.is-active {
+  background: #fff7ed;
+  color: #9a3412;
+  border-color: #fdba74;
+}
+
+.toggle-field {
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+.toggle-field input {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+}
+
+.voucher-code-stack,
+.voucher-rule-stack,
+.voucher-usage-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.voucher-warning {
+  border-radius: 12px;
+  padding: 12px 14px;
+  background: #fff7ed;
+  border: 1px solid #fdba74;
+  color: #9a3412;
+  margin-bottom: 14px;
+}
+
+.voucher-warning.is-strong {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
+.usage-badge {
+  align-self: flex-start;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #e5e7eb;
+  color: #374151;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.usage-badge.is-high {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.status-toggle {
+  min-width: 96px;
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-weight: 700;
+}
+
+.status-toggle.is-active {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status-toggle.is-inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.archived-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 8px 12px;
+  background: #e5e7eb;
+  color: #374151;
+  font-weight: 700;
+}
+
+.archive-reason-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 6px 10px;
+  background: #f3f4f6;
+  color: #6b7280;
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.archive-reason-badge.has-value {
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.vouchers-table td {
+  vertical-align: middle;
+}
+
 @media (max-width: 960px) {
   .dashboard-hero,
   .dashboard-layout-grid,
@@ -690,5 +845,8 @@ td {
   .category-form-row {
     flex-direction: column;
     align-items: stretch;
+  }
+  .toggle-field {
+    width: 100%;
   }
 }

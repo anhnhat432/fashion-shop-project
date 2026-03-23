@@ -22,16 +22,25 @@ export default function CheckoutScreen({ navigation }) {
   const [phone, setPhone] = useState("");
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [bankTransferConfirmed, setBankTransferConfirmed] = useState(false);
+  const [voucherCode, setVoucherCode] = useState("");
+  const [appliedVoucher, setAppliedVoucher] = useState(null);
+  const [applyingVoucher, setApplyingVoucher] = useState(false);
   const [loading, setLoading] = useState(false);
   const introAnim = useRef(new Animated.Value(0)).current;
   const transferAnim = useRef(new Animated.Value(0)).current;
 
   const subtotal = useMemo(
-    () => cartItems.reduce((sum, item) => sum + Number(item.price || 0) * Number(item.quantity || 0), 0),
+    () =>
+      cartItems.reduce(
+        (sum, item) =>
+          sum + Number(item.price || 0) * Number(item.quantity || 0),
+        0,
+      ),
     [cartItems],
   );
   const shippingFee = subtotal >= 499000 ? 0 : 30000;
-  const finalTotal = subtotal + shippingFee;
+  const discountAmount = Number(appliedVoucher?.discountAmount || 0);
+  const finalTotal = subtotal - discountAmount + shippingFee;
   const itemCount = useMemo(
     () => cartItems.reduce((sum, item) => sum + Number(item.quantity || 0), 0),
     [cartItems],
@@ -57,6 +66,33 @@ export default function CheckoutScreen({ navigation }) {
     }).start();
   }, [paymentMethod, transferAnim]);
 
+  useEffect(() => {
+    setAppliedVoucher(null);
+  }, [subtotal]);
+
+  const applyVoucher = async () => {
+    if (!voucherCode.trim()) {
+      return Alert.alert("Lỗi", "Vui lòng nhập mã voucher");
+    }
+
+    setApplyingVoucher(true);
+    try {
+      const res = await api.get(`/vouchers/validate/${voucherCode.trim()}`, {
+        params: { subtotal },
+      });
+      setAppliedVoucher(res.data.data);
+      Alert.alert("Thành công", `Áp dụng mã ${res.data.data.code} thành công`);
+    } catch (error) {
+      setAppliedVoucher(null);
+      Alert.alert(
+        "Lỗi",
+        error.response?.data?.message || "Voucher không hợp lệ",
+      );
+    } finally {
+      setApplyingVoucher(false);
+    }
+  };
+
   const handleCheckout = async () => {
     if (!shippingAddress.trim() || shippingAddress.trim().length < 5) {
       return Alert.alert("Lỗi", "Địa chỉ nhận hàng cần tối thiểu 5 ký tự");
@@ -70,7 +106,10 @@ export default function CheckoutScreen({ navigation }) {
     if (!cartItems.length) return Alert.alert("Lỗi", "Giỏ hàng đang trống");
 
     if (paymentMethod === "BANK_TRANSFER" && !bankTransferConfirmed) {
-      return Alert.alert("Lỗi", "Vui lòng xác nhận đã hoàn tất chuyển khoản mô phỏng");
+      return Alert.alert(
+        "Lỗi",
+        "Vui lòng xác nhận đã hoàn tất chuyển khoản mô phỏng",
+      );
     }
 
     setLoading(true);
@@ -81,6 +120,7 @@ export default function CheckoutScreen({ navigation }) {
         phone: normalizedPhone,
         paymentMethod,
         bankTransferConfirmed,
+        voucherCode: appliedVoucher?.code || "",
         transferReference,
         paymentNote:
           paymentMethod === "BANK_TRANSFER"
@@ -91,7 +131,10 @@ export default function CheckoutScreen({ navigation }) {
       Alert.alert("Thành công", "Đặt hàng thành công");
       navigation.replace("OrderHistory");
     } catch (error) {
-      Alert.alert("Lỗi", error.response?.data?.message || "Không thể tạo đơn hàng");
+      Alert.alert(
+        "Lỗi",
+        error.response?.data?.message || "Không thể tạo đơn hàng",
+      );
     } finally {
       setLoading(false);
     }
@@ -104,7 +147,10 @@ export default function CheckoutScreen({ navigation }) {
           opacity: introAnim,
           transform: [
             {
-              translateY: introAnim.interpolate({ inputRange: [0, 1], outputRange: [16, 0] }),
+              translateY: introAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [16, 0],
+              }),
             },
           ],
         }}
@@ -118,7 +164,8 @@ export default function CheckoutScreen({ navigation }) {
             <Ionicons name="card-outline" size={24} color="#fde68a" />
           </View>
           <Text style={styles.heroSubtitle}>
-            Kiểm tra thông tin giao hàng, chọn cách thanh toán và hoàn tất đơn trong một màn hình.
+            Kiểm tra thông tin giao hàng, chọn cách thanh toán và hoàn tất đơn
+            trong một màn hình.
           </Text>
           <View style={styles.heroStats}>
             <View style={styles.heroStatCard}>
@@ -126,7 +173,9 @@ export default function CheckoutScreen({ navigation }) {
               <Text style={styles.heroStatLabel}>Items</Text>
             </View>
             <View style={styles.heroStatCard}>
-              <Text style={styles.heroStatValue}>{finalTotal.toLocaleString()} đ</Text>
+              <Text style={styles.heroStatValue}>
+                {finalTotal.toLocaleString()} đ
+              </Text>
               <Text style={styles.heroStatLabel}>Final total</Text>
             </View>
           </View>
@@ -161,7 +210,10 @@ export default function CheckoutScreen({ navigation }) {
           <Text style={styles.sectionTitle}>Phương thức thanh toán</Text>
           <View style={styles.paymentMethodColumn}>
             <Pressable
-              style={[styles.paymentMethodCard, paymentMethod === "COD" && styles.paymentMethodCardActive]}
+              style={[
+                styles.paymentMethodCard,
+                paymentMethod === "COD" && styles.paymentMethodCardActive,
+              ]}
               onPress={() => {
                 setPaymentMethod("COD");
                 setBankTransferConfirmed(false);
@@ -171,18 +223,26 @@ export default function CheckoutScreen({ navigation }) {
                 <Ionicons name="cash-outline" size={18} color="#111827" />
                 <Text style={styles.paymentMethodTitle}>COD</Text>
               </View>
-              <Text style={styles.paymentMethodMeta}>Thanh toán khi nhận hàng</Text>
+              <Text style={styles.paymentMethodMeta}>
+                Thanh toán khi nhận hàng
+              </Text>
             </Pressable>
 
             <Pressable
-              style={[styles.paymentMethodCard, paymentMethod === "BANK_TRANSFER" && styles.paymentMethodCardActive]}
+              style={[
+                styles.paymentMethodCard,
+                paymentMethod === "BANK_TRANSFER" &&
+                  styles.paymentMethodCardActive,
+              ]}
               onPress={() => setPaymentMethod("BANK_TRANSFER")}
             >
               <View style={styles.paymentMethodHead}>
                 <Ionicons name="business-outline" size={18} color="#111827" />
                 <Text style={styles.paymentMethodTitle}>BANK_TRANSFER</Text>
               </View>
-              <Text style={styles.paymentMethodMeta}>Mô phỏng chuyển khoản trước khi xác nhận đơn</Text>
+              <Text style={styles.paymentMethodMeta}>
+                Mô phỏng chuyển khoản trước khi xác nhận đơn
+              </Text>
             </Pressable>
           </View>
 
@@ -194,29 +254,91 @@ export default function CheckoutScreen({ navigation }) {
                   opacity: transferAnim,
                   transform: [
                     {
-                      translateY: transferAnim.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }),
+                      translateY: transferAnim.interpolate({
+                        inputRange: [0, 1],
+                        outputRange: [12, 0],
+                      }),
                     },
                   ],
                 },
               ]}
             >
-              <Text style={styles.transferTitle}>Thông tin chuyển khoản mô phỏng</Text>
+              <Text style={styles.transferTitle}>
+                Thông tin chuyển khoản mô phỏng
+              </Text>
               <Text style={styles.transferLine}>Ngân hàng: MB Bank</Text>
               <Text style={styles.transferLine}>Số tài khoản: 1234567899</Text>
-              <Text style={styles.transferLine}>Chủ tài khoản: FASHION SHOP DEMO</Text>
-              <Text style={styles.transferLine}>Nội dung: {transferReference}</Text>
-              <Text style={styles.transferLine}>Số tiền mô phỏng: {finalTotal.toLocaleString()} đ</Text>
+              <Text style={styles.transferLine}>
+                Chủ tài khoản: FASHION SHOP DEMO
+              </Text>
+              <Text style={styles.transferLine}>
+                Nội dung: {transferReference}
+              </Text>
+              <Text style={styles.transferLine}>
+                Số tiền mô phỏng: {finalTotal.toLocaleString()} đ
+              </Text>
 
               <Pressable
-                style={[styles.confirmBox, bankTransferConfirmed && styles.confirmBoxActive]}
+                style={[
+                  styles.confirmBox,
+                  bankTransferConfirmed && styles.confirmBoxActive,
+                ]}
                 onPress={() => setBankTransferConfirmed((prev) => !prev)}
               >
-                <View style={[styles.checkbox, bankTransferConfirmed && styles.checkboxActive]}>
-                  {bankTransferConfirmed ? <Text style={styles.checkboxTick}>✓</Text> : null}
+                <View
+                  style={[
+                    styles.checkbox,
+                    bankTransferConfirmed && styles.checkboxActive,
+                  ]}
+                >
+                  {bankTransferConfirmed ? (
+                    <Text style={styles.checkboxTick}>✓</Text>
+                  ) : null}
                 </View>
-                <Text style={styles.confirmText}>Tôi đã hoàn tất chuyển khoản mô phỏng</Text>
+                <Text style={styles.confirmText}>
+                  Tôi đã hoàn tất chuyển khoản mô phỏng
+                </Text>
               </Pressable>
             </Animated.View>
+          ) : null}
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Voucher ưu đãi</Text>
+          <View style={styles.voucherRow}>
+            <View style={[styles.inputShell, styles.voucherInputShell]}>
+              <Ionicons name="pricetag-outline" size={18} color="#9a3412" />
+              <TextInput
+                style={styles.input}
+                placeholder="Nhập mã voucher"
+                placeholderTextColor="#9ca3af"
+                value={voucherCode}
+                onChangeText={setVoucherCode}
+                autoCapitalize="characters"
+              />
+            </View>
+            <Pressable
+              style={[
+                styles.applyBtn,
+                applyingVoucher && styles.submitBtnDisabled,
+              ]}
+              onPress={applyVoucher}
+              disabled={applyingVoucher}
+            >
+              <Text style={styles.applyBtnText}>
+                {applyingVoucher ? "..." : "Áp dụng"}
+              </Text>
+            </Pressable>
+          </View>
+          {appliedVoucher ? (
+            <View style={styles.voucherCard}>
+              <Text style={styles.voucherTitle}>Mã {appliedVoucher.code}</Text>
+              <Text style={styles.voucherText}>
+                Giảm{" "}
+                {Number(appliedVoucher.discountAmount || 0).toLocaleString()} đ
+                cho đơn hiện tại
+              </Text>
+            </View>
           ) : null}
         </View>
 
@@ -232,15 +354,27 @@ export default function CheckoutScreen({ navigation }) {
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Tạm tính</Text>
-            <Text style={styles.summaryValue}>{subtotal.toLocaleString()} đ</Text>
+            <Text style={styles.summaryValue}>
+              {subtotal.toLocaleString()} đ
+            </Text>
           </View>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Phí vận chuyển</Text>
-            <Text style={styles.summaryValue}>{shippingFee.toLocaleString()} đ</Text>
+            <Text style={styles.summaryValue}>
+              {shippingFee.toLocaleString()} đ
+            </Text>
+          </View>
+          <View style={styles.summaryRow}>
+            <Text style={styles.summaryLabel}>Giảm giá voucher</Text>
+            <Text style={styles.summaryDiscount}>
+              - {discountAmount.toLocaleString()} đ
+            </Text>
           </View>
           <View style={[styles.summaryRow, styles.summaryRowTotal]}>
             <Text style={styles.summaryTotalLabel}>Tổng thanh toán</Text>
-            <Text style={styles.summaryTotalValue}>{finalTotal.toLocaleString()} đ</Text>
+            <Text style={styles.summaryTotalValue}>
+              {finalTotal.toLocaleString()} đ
+            </Text>
           </View>
         </View>
 
@@ -249,7 +383,9 @@ export default function CheckoutScreen({ navigation }) {
           onPress={handleCheckout}
           disabled={loading}
         >
-          <Text style={styles.submitBtnText}>{loading ? "Đang đặt hàng..." : "Xác nhận đặt hàng"}</Text>
+          <Text style={styles.submitBtnText}>
+            {loading ? "Đang đặt hàng..." : "Xác nhận đặt hàng"}
+          </Text>
         </Pressable>
       </Animated.View>
     </ScrollView>
@@ -274,7 +410,12 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: FONTS.bold,
   },
-  heroTitle: { color: "#fff", fontSize: 24, lineHeight: 32, fontFamily: FONTS.bold },
+  heroTitle: {
+    color: "#fff",
+    fontSize: 24,
+    lineHeight: 32,
+    fontFamily: FONTS.bold,
+  },
   heroSubtitle: { color: "#d1d5db", lineHeight: 20, fontFamily: FONTS.regular },
   heroStats: { flexDirection: "row", gap: 10 },
   heroStatCard: {
@@ -316,7 +457,10 @@ const styles = StyleSheet.create({
     padding: 12,
     gap: 4,
   },
-  paymentMethodCardActive: { borderColor: "#111827", backgroundColor: "#f9fafb" },
+  paymentMethodCardActive: {
+    borderColor: "#111827",
+    backgroundColor: "#f9fafb",
+  },
   paymentMethodHead: { flexDirection: "row", alignItems: "center", gap: 8 },
   paymentMethodTitle: { color: "#111827", fontFamily: FONTS.bold },
   paymentMethodMeta: { color: "#6b7280", fontFamily: FONTS.regular },
@@ -353,6 +497,24 @@ const styles = StyleSheet.create({
   checkboxActive: { backgroundColor: "#111827", borderColor: "#111827" },
   checkboxTick: { color: "#fff", fontFamily: FONTS.bold },
   confirmText: { flex: 1, color: "#111827", fontFamily: FONTS.medium },
+  voucherRow: { flexDirection: "row", gap: 8, alignItems: "center" },
+  voucherInputShell: { flex: 1 },
+  applyBtn: {
+    backgroundColor: "#111827",
+    borderRadius: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+  },
+  applyBtnText: { color: "#fff", fontFamily: FONTS.bold },
+  voucherCard: {
+    backgroundColor: "#ecfdf5",
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#86efac",
+  },
+  voucherTitle: { color: "#166534", fontFamily: FONTS.bold },
+  voucherText: { color: "#166534", fontFamily: FONTS.regular },
   orderPreviewRow: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
   orderPreviewChip: {
     borderRadius: 999,
@@ -374,6 +536,7 @@ const styles = StyleSheet.create({
   },
   summaryLabel: { color: "#6b7280", fontFamily: FONTS.regular },
   summaryValue: { color: "#111827", fontFamily: FONTS.medium },
+  summaryDiscount: { color: "#166534", fontFamily: FONTS.bold },
   summaryTotalLabel: { color: "#111827", fontFamily: FONTS.bold },
   summaryTotalValue: { color: "#111827", fontSize: 18, fontFamily: FONTS.bold },
   submitBtn: {

@@ -6,6 +6,16 @@ export const useCart = () => useContext(CartContext);
 
 const CART_STORAGE_KEY = "fashion-shop-cart";
 
+const getAvailableStock = (item) => {
+  const stock = Number(item.availableStock);
+
+  if (!Number.isFinite(stock) || stock < 0) {
+    return null;
+  }
+
+  return stock;
+};
+
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
   const [hydrated, setHydrated] = useState(false);
@@ -37,6 +47,19 @@ export const CartProvider = ({ children }) => {
   }, [cartItems, hydrated]);
 
   const addToCart = (item) => {
+    const requestedQuantity = Math.max(1, Number(item.quantity || 1));
+    const availableStock = getAvailableStock(item);
+    let result = {
+      addedQuantity: requestedQuantity,
+      quantity: requestedQuantity,
+      capped: false,
+      outOfStock: availableStock === 0,
+    };
+
+    if (availableStock === 0) {
+      return result;
+    }
+
     setCartItems((prev) => {
       const idx = prev.findIndex(
         (p) =>
@@ -44,20 +67,76 @@ export const CartProvider = ({ children }) => {
           p.size === item.size &&
           p.color === item.color,
       );
+
       if (idx >= 0) {
         const copy = [...prev];
-        copy[idx].quantity += item.quantity;
+        const currentQuantity = Number(copy[idx].quantity || 0);
+        const nextQuantity =
+          availableStock === null
+            ? currentQuantity + requestedQuantity
+            : Math.min(currentQuantity + requestedQuantity, availableStock);
+
+        result = {
+          addedQuantity: Math.max(0, nextQuantity - currentQuantity),
+          quantity: nextQuantity,
+          capped:
+            availableStock !== null &&
+            nextQuantity < currentQuantity + requestedQuantity,
+          outOfStock: nextQuantity === currentQuantity,
+        };
+
+        copy[idx] = {
+          ...copy[idx],
+          ...item,
+          quantity: nextQuantity,
+          availableStock,
+        };
         return copy;
       }
-      return [...prev, item];
+
+      const nextQuantity =
+        availableStock === null
+          ? requestedQuantity
+          : Math.min(requestedQuantity, availableStock);
+
+      result = {
+        addedQuantity: nextQuantity,
+        quantity: nextQuantity,
+        capped: availableStock !== null && nextQuantity < requestedQuantity,
+        outOfStock: nextQuantity === 0,
+      };
+
+      if (nextQuantity === 0) {
+        return prev;
+      }
+
+      return [
+        ...prev,
+        {
+          ...item,
+          quantity: nextQuantity,
+          availableStock,
+        },
+      ];
     });
+
+    return result;
   };
 
   const updateQty = (index, change) => {
     setCartItems((prev) =>
       prev.map((item, idx) =>
         idx === index
-          ? { ...item, quantity: Math.max(1, item.quantity + change) }
+          ? {
+              ...item,
+              quantity:
+                getAvailableStock(item) === null
+                  ? Math.max(1, item.quantity + change)
+                  : Math.max(
+                      1,
+                      Math.min(item.quantity + change, getAvailableStock(item)),
+                    ),
+            }
           : item,
       ),
     );

@@ -8,6 +8,7 @@ import AppTabs from "./AppTabs";
 import ProductDetailScreen from "../screens/ProductDetailScreen";
 import CheckoutScreen from "../screens/CheckoutScreen";
 import OrderHistoryScreen from "../screens/OrderHistoryScreen";
+import WishlistScreen from "../screens/WishlistScreen";
 import { FONTS } from "../constants/fonts";
 
 const Stack = createNativeStackNavigator();
@@ -80,6 +81,11 @@ export default function RootNavigator() {
             name="OrderHistory"
             component={OrderHistoryScreen}
             options={{ title: "Lịch sử đơn hàng" }}
+          />
+          <Stack.Screen
+            name="Wishlist"
+            component={WishlistScreen}
+            options={{ title: "Wishlist" }}
           />
         </>
       )}

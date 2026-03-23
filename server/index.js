@@ -23,6 +23,7 @@ app.get("/", (req, res) => {
       "/api/categories",
       "/api/products",
       "/api/orders",
+      "/api/vouchers",
     ],
   });
 });
@@ -35,6 +36,7 @@ app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/categories", require("./routes/categoryRoutes"));
 app.use("/api/products", require("./routes/productRoutes"));
 app.use("/api/orders", require("./routes/orderRoutes"));
+app.use("/api/vouchers", require("./routes/voucherRoutes"));
 
 app.use(notFound);
 app.use(errorHandler);

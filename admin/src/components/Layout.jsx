@@ -5,7 +5,8 @@ const menus = [
   { to: '/', label: 'Dashboard', mark: 'DB' },
   { to: '/products', label: 'Products', mark: 'PR' },
   { to: '/categories', label: 'Categories', mark: 'CT' },
-  { to: '/orders', label: 'Orders', mark: 'OD' }
+  { to: '/orders', label: 'Orders', mark: 'OD' },
+  { to: '/vouchers', label: 'Vouchers', mark: 'VC' }
 ];
 
 export default function Layout({ children }) {

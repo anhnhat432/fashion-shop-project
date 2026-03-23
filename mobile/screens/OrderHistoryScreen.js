@@ -14,14 +14,23 @@ import SkeletonBlock from "../components/SkeletonBlock";
 import { FONTS } from "../constants/fonts";
 
 const paymentStatusMap = {
-  PAID: 'Đã thanh toán',
-  PENDING: 'Chưa thanh toán',
+  PAID: "Đã thanh toán",
+  PENDING: "Chưa thanh toán",
+};
+
+const orderStatusMap = {
+  PENDING: "Chờ xác nhận",
+  CONFIRMED: "Đã xác nhận",
+  SHIPPING: "Đang giao",
+  DELIVERED: "Đã giao",
+  CANCELLED: "Đã hủy",
 };
 
 export default function OrderHistoryScreen() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [cancellingId, setCancellingId] = useState("");
   const revealAnim = useRef(new Animated.Value(0)).current;
 
   const fetchOrders = async () => {
@@ -53,8 +62,24 @@ export default function OrderHistoryScreen() {
     }
   }, [loading, revealAnim]);
 
-  const paidCount = orders.filter((item) => item.paymentStatus === "PAID").length;
-  const pendingCount = orders.filter((item) => item.paymentStatus !== "PAID").length;
+  const paidCount = orders.filter(
+    (item) => item.paymentStatus === "PAID",
+  ).length;
+  const pendingCount = orders.filter(
+    (item) => item.paymentStatus !== "PAID",
+  ).length;
+
+  const cancelOrder = async (orderId) => {
+    setCancellingId(orderId);
+    try {
+      await api.put(`/orders/${orderId}/cancel`);
+      await fetchOrders();
+    } catch (err) {
+      setError(err.response?.data?.message || "Không thể hủy đơn hàng");
+    } finally {
+      setCancellingId("");
+    }
+  };
 
   const renderHeader = () => (
     <View style={styles.headerWrap}>
@@ -62,12 +87,15 @@ export default function OrderHistoryScreen() {
         <View style={styles.heroTop}>
           <View>
             <Text style={styles.heroEyebrow}>Order journal</Text>
-            <Text style={styles.heroTitle}>Theo dõi từng đơn hàng của bạn.</Text>
+            <Text style={styles.heroTitle}>
+              Theo dõi từng đơn hàng của bạn.
+            </Text>
           </View>
           <Ionicons name="receipt-outline" size={24} color="#fde68a" />
         </View>
         <Text style={styles.heroSubtitle}>
-          Kiểm tra trạng thái giao hàng, thanh toán và mã chuyển khoản mô phỏng trong một màn hình.
+          Kiểm tra trạng thái giao hàng, thanh toán và mã chuyển khoản mô phỏng
+          trong một màn hình.
         </Text>
         <View style={styles.heroStats}>
           <View style={styles.heroStatCard}>
@@ -125,7 +153,10 @@ export default function OrderHistoryScreen() {
         opacity: revealAnim,
         transform: [
           {
-            translateY: revealAnim.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }),
+            translateY: revealAnim.interpolate({
+              inputRange: [0, 1],
+              outputRange: [12, 0],
+            }),
           },
         ],
       }}
@@ -140,7 +171,9 @@ export default function OrderHistoryScreen() {
           <View style={styles.emptyCard}>
             <Ionicons name="file-tray-outline" size={34} color="#9ca3af" />
             <Text style={styles.emptyTitle}>Chưa có đơn hàng nào</Text>
-            <Text style={styles.empty}>Khi bạn checkout, lịch sử đơn sẽ xuất hiện ở đây.</Text>
+            <Text style={styles.empty}>
+              Khi bạn checkout, lịch sử đơn sẽ xuất hiện ở đây.
+            </Text>
           </View>
         }
         renderItem={({ item }) => (
@@ -148,10 +181,26 @@ export default function OrderHistoryScreen() {
             <View style={styles.cardHead}>
               <View style={styles.orderCodeWrap}>
                 <Text style={styles.codeLabel}>Mã đơn</Text>
-                <Text style={styles.code}>#{item._id.slice(-8).toUpperCase()}</Text>
+                <Text style={styles.code}>
+                  #{item._id.slice(-8).toUpperCase()}
+                </Text>
               </View>
-              <View style={[styles.statusBadge, item.paymentStatus === "PAID" ? styles.paidBadge : styles.pendingBadge]}>
-                <Text style={[styles.statusBadgeText, item.paymentStatus === "PAID" ? styles.paidBadgeText : styles.pendingBadgeText]}>
+              <View
+                style={[
+                  styles.statusBadge,
+                  item.paymentStatus === "PAID"
+                    ? styles.paidBadge
+                    : styles.pendingBadge,
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.statusBadgeText,
+                    item.paymentStatus === "PAID"
+                      ? styles.paidBadgeText
+                      : styles.pendingBadgeText,
+                  ]}
+                >
                   {paymentStatusMap[item.paymentStatus] || item.paymentStatus}
                 </Text>
               </View>
@@ -160,18 +209,67 @@ export default function OrderHistoryScreen() {
             <View style={styles.timelineWrap}>
               <View style={styles.timelineDot} />
               <View style={styles.timelineContent}>
-                <Text style={styles.status}>Trạng thái đơn: {item.status}</Text>
-                <Text style={styles.meta}>Phương thức: {item.paymentMethod}</Text>
+                <Text style={styles.status}>
+                  Trạng thái đơn: {orderStatusMap[item.status] || item.status}
+                </Text>
+                <Text style={styles.meta}>
+                  Phương thức: {item.paymentMethod}
+                </Text>
                 {item.transferReference ? (
-                  <Text style={styles.meta}>Mã chuyển khoản: {item.transferReference}</Text>
+                  <Text style={styles.meta}>
+                    Mã chuyển khoản: {item.transferReference}
+                  </Text>
                 ) : null}
               </View>
             </View>
 
+            {item.items?.length ? (
+              <View style={styles.itemsWrap}>
+                {item.items.map((orderItem, index) => (
+                  <View
+                    key={`${orderItem.productId}-${index}`}
+                    style={styles.orderItemRow}
+                  >
+                    <View style={styles.orderItemContent}>
+                      <Text style={styles.orderItemName} numberOfLines={1}>
+                        {orderItem.name}
+                      </Text>
+                      <Text style={styles.orderItemMeta}>
+                        {orderItem.size || "One size"} •{" "}
+                        {orderItem.color || "Neutral"} • x{orderItem.quantity}
+                      </Text>
+                    </View>
+                    <Text style={styles.orderItemPrice}>
+                      {Number(orderItem.price || 0).toLocaleString()} đ
+                    </Text>
+                  </View>
+                ))}
+              </View>
+            ) : null}
+
             <View style={styles.cardFooter}>
               <Text style={styles.totalLabel}>Tổng thanh toán</Text>
-              <Text style={styles.total}>{Number(item.totalAmount || 0).toLocaleString()} đ</Text>
+              <Text style={styles.total}>
+                {Number(item.totalAmount || 0).toLocaleString()} đ
+              </Text>
             </View>
+
+            {item.status === "PENDING" ? (
+              <Pressable
+                style={[
+                  styles.cancelBtn,
+                  cancellingId === item._id && styles.cancelBtnDisabled,
+                ]}
+                onPress={() => cancelOrder(item._id)}
+                disabled={cancellingId === item._id}
+              >
+                <Text style={styles.cancelBtnText}>
+                  {cancellingId === item._id
+                    ? "Đang hủy đơn..."
+                    : "Hủy đơn hàng"}
+                </Text>
+              </Pressable>
+            ) : null}
           </View>
         )}
       />
@@ -222,7 +320,12 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: FONTS.bold,
   },
-  heroTitle: { color: "#fff", fontSize: 24, lineHeight: 32, fontFamily: FONTS.bold },
+  heroTitle: {
+    color: "#fff",
+    fontSize: 24,
+    lineHeight: 32,
+    fontFamily: FONTS.bold,
+  },
   heroSubtitle: { color: "#d1d5db", lineHeight: 20, fontFamily: FONTS.regular },
   heroStats: { flexDirection: "row", gap: 10 },
   heroStatCard: {
@@ -240,9 +343,20 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     gap: 12,
   },
-  cardHead: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", gap: 12 },
+  cardHead: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+  },
   orderCodeWrap: { gap: 2 },
-  codeLabel: { color: "#9ca3af", fontSize: 11, textTransform: "uppercase", letterSpacing: 0.7, fontFamily: FONTS.medium },
+  codeLabel: {
+    color: "#9ca3af",
+    fontSize: 11,
+    textTransform: "uppercase",
+    letterSpacing: 0.7,
+    fontFamily: FONTS.medium,
+  },
   code: { color: "#111827", fontFamily: FONTS.bold, fontSize: 18 },
   statusBadge: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
   paidBadge: { backgroundColor: "#dcfce7" },
@@ -251,10 +365,32 @@ const styles = StyleSheet.create({
   paidBadgeText: { color: "#166534" },
   pendingBadgeText: { color: "#92400e" },
   timelineWrap: { flexDirection: "row", gap: 10 },
-  timelineDot: { width: 10, height: 10, borderRadius: 999, marginTop: 6, backgroundColor: "#111827" },
+  timelineDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 999,
+    marginTop: 6,
+    backgroundColor: "#111827",
+  },
   timelineContent: { flex: 1, gap: 2 },
   status: { color: "#374151", fontFamily: FONTS.medium },
-  meta: { color: '#6b7280', fontFamily: FONTS.regular },
+  meta: { color: "#6b7280", fontFamily: FONTS.regular },
+  itemsWrap: {
+    borderTopWidth: 1,
+    borderTopColor: "#f3f4f6",
+    paddingTop: 10,
+    gap: 8,
+  },
+  orderItemRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    gap: 12,
+  },
+  orderItemContent: { flex: 1, gap: 2 },
+  orderItemName: { color: "#111827", fontFamily: FONTS.medium },
+  orderItemMeta: { color: "#6b7280", fontFamily: FONTS.regular, fontSize: 12 },
+  orderItemPrice: { color: "#111827", fontFamily: FONTS.bold },
   cardFooter: {
     borderTopWidth: 1,
     borderTopColor: "#e5e7eb",
@@ -265,6 +401,14 @@ const styles = StyleSheet.create({
   },
   totalLabel: { color: "#6b7280", fontFamily: FONTS.regular },
   total: { fontWeight: "700", color: "#111827", fontFamily: FONTS.bold },
+  cancelBtn: {
+    backgroundColor: "#fee2e2",
+    borderRadius: 12,
+    paddingVertical: 12,
+    alignItems: "center",
+  },
+  cancelBtnDisabled: { opacity: 0.6 },
+  cancelBtnText: { color: "#b91c1c", fontFamily: FONTS.bold },
   empty: {
     textAlign: "center",
     color: "#6b7280",

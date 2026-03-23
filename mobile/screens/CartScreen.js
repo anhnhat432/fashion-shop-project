@@ -27,7 +27,9 @@ export default function CartScreen({ navigation }) {
         <View style={styles.heroBadge}>
           <Text style={styles.heroBadgeText}>Bag overview</Text>
         </View>
-        <Text style={styles.heroTitle}>Giỏ đồ của bạn đã sẵn sàng để checkout.</Text>
+        <Text style={styles.heroTitle}>
+          Giỏ đồ của bạn đã sẵn sàng để checkout.
+        </Text>
         <Text style={styles.heroSubtitle}>
           Kiểm tra số lượng, phối màu và tổng đơn trước khi xác nhận thanh toán.
         </Text>
@@ -37,7 +39,9 @@ export default function CartScreen({ navigation }) {
             <Text style={styles.heroStatLabel}>Sản phẩm</Text>
           </View>
           <View style={styles.heroStatCard}>
-            <Text style={styles.heroStatValue}>{subtotal.toLocaleString()} đ</Text>
+            <Text style={styles.heroStatValue}>
+              {subtotal.toLocaleString()} đ
+            </Text>
             <Text style={styles.heroStatLabel}>Tạm tính</Text>
           </View>
         </View>
@@ -56,8 +60,13 @@ export default function CartScreen({ navigation }) {
           <View style={styles.emptyCard}>
             <Ionicons name="bag-handle-outline" size={34} color="#9ca3af" />
             <Text style={styles.emptyTitle}>Giỏ hàng đang trống</Text>
-            <Text style={styles.emptyText}>Thêm vài item nổi bật để bắt đầu đơn hàng mới.</Text>
-            <Pressable style={styles.browseBtn} onPress={() => navigation.navigate("Home")}> 
+            <Text style={styles.emptyText}>
+              Thêm vài item nổi bật để bắt đầu đơn hàng mới.
+            </Text>
+            <Pressable
+              style={styles.browseBtn}
+              onPress={() => navigation.navigate("Home")}
+            >
               <Text style={styles.browseBtnText}>Quay lại mua sắm</Text>
             </Pressable>
           </View>
@@ -76,6 +85,12 @@ export default function CartScreen({ navigation }) {
               <Text style={styles.lineTotal}>
                 {Number(item.price).toLocaleString()} đ x {item.quantity}
               </Text>
+              {Number.isFinite(Number(item.availableStock)) ? (
+                <Text style={styles.stockNote}>
+                  Còn tối đa {Number(item.availableStock)} sản phẩm cho lựa chọn
+                  này
+                </Text>
+              ) : null}
               <View style={styles.row}>
                 <View style={styles.qtyWrap}>
                   <Pressable
@@ -86,8 +101,18 @@ export default function CartScreen({ navigation }) {
                   </Pressable>
                   <Text style={styles.qtyValue}>{item.quantity}</Text>
                   <Pressable
-                    style={styles.smallBtn}
+                    style={[
+                      styles.smallBtn,
+                      Number.isFinite(Number(item.availableStock)) &&
+                      item.quantity >= Number(item.availableStock)
+                        ? styles.smallBtnDisabled
+                        : null,
+                    ]}
                     onPress={() => updateQty(index, 1)}
+                    disabled={
+                      Number.isFinite(Number(item.availableStock)) &&
+                      item.quantity >= Number(item.availableStock)
+                    }
                   >
                     <Text style={styles.qtyText}>+</Text>
                   </Pressable>
@@ -110,7 +135,9 @@ export default function CartScreen({ navigation }) {
         </View>
         <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Phí vận chuyển</Text>
-          <Text style={styles.summaryValue}>{shippingFee.toLocaleString()} đ</Text>
+          <Text style={styles.summaryValue}>
+            {shippingFee.toLocaleString()} đ
+          </Text>
         </View>
         <View style={[styles.summaryRow, styles.totalRow]}>
           <Text style={styles.total}>Tổng cộng</Text>
@@ -152,7 +179,12 @@ const styles = StyleSheet.create({
     letterSpacing: 0.8,
     fontFamily: FONTS.bold,
   },
-  heroTitle: { color: "#fff", fontSize: 24, lineHeight: 32, fontFamily: FONTS.bold },
+  heroTitle: {
+    color: "#fff",
+    fontSize: 24,
+    lineHeight: 32,
+    fontFamily: FONTS.bold,
+  },
   heroSubtitle: { color: "#d1d5db", lineHeight: 20, fontFamily: FONTS.regular },
   heroStatsRow: { flexDirection: "row", gap: 10 },
   heroStatCard: {
@@ -177,12 +209,28 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     elevation: 2,
   },
-  image: { width: 92, height: 110, borderRadius: 14, backgroundColor: "#f3f4f6" },
+  image: {
+    width: 92,
+    height: 110,
+    borderRadius: 14,
+    backgroundColor: "#f3f4f6",
+  },
   itemContent: { flex: 1, gap: 4 },
-  name: { fontWeight: "700", marginBottom: 2, color: "#111827", fontFamily: FONTS.bold },
+  name: {
+    fontWeight: "700",
+    marginBottom: 2,
+    color: "#111827",
+    fontFamily: FONTS.bold,
+  },
   meta: { color: "#6b7280", marginBottom: 2, fontFamily: FONTS.regular },
   lineTotal: { color: "#111827", fontFamily: FONTS.medium },
-  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginTop: 10 },
+  stockNote: { color: "#6b7280", fontFamily: FONTS.regular },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: 10,
+  },
   qtyWrap: {
     flexDirection: "row",
     alignItems: "center",
@@ -198,8 +246,14 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     paddingHorizontal: 12,
   },
+  smallBtnDisabled: { opacity: 0.45 },
   qtyText: { color: "#111827", fontFamily: FONTS.bold, fontSize: 16 },
-  qtyValue: { minWidth: 18, textAlign: "center", color: "#111827", fontFamily: FONTS.bold },
+  qtyValue: {
+    minWidth: 18,
+    textAlign: "center",
+    color: "#111827",
+    fontFamily: FONTS.bold,
+  },
   danger: { backgroundColor: "#fee2e2" },
   removeText: { color: "#b91c1c", fontFamily: FONTS.medium },
   footer: {
@@ -222,7 +276,12 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     marginTop: 4,
   },
-  total: { fontSize: 18, fontWeight: "700", color: "#111827", fontFamily: FONTS.bold },
+  total: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#111827",
+    fontFamily: FONTS.bold,
+  },
   checkoutBtn: {
     backgroundColor: "#111827",
     borderRadius: 14,
@@ -246,7 +305,11 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   emptyTitle: { color: "#111827", fontSize: 18, fontFamily: FONTS.bold },
-  emptyText: { color: "#6b7280", textAlign: "center", fontFamily: FONTS.regular },
+  emptyText: {
+    color: "#6b7280",
+    textAlign: "center",
+    fontFamily: FONTS.regular,
+  },
   browseBtn: {
     marginTop: 8,
     backgroundColor: "#111827",

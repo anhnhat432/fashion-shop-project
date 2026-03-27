@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -18,13 +20,20 @@ export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
     const normalizedEmail = email.trim().toLowerCase();
-    if (!normalizedEmail || !password)
-      return Alert.alert("Lỗi", "Vui lòng nhập email và mật khẩu");
-    if (!normalizedEmail.includes("@"))
-      return Alert.alert("Lỗi", "Email không hợp lệ");
+    const newErrors = {};
+    if (!normalizedEmail) newErrors.email = "Email không được để trống";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) newErrors.email = "Email không hợp lệ";
+    if (!password) newErrors.password = "Mật khẩu không được để trống";
+
+    if (Object.values(newErrors).some(Boolean)) {
+      setErrors(newErrors);
+      return;
+    }
 
     setLoading(true);
     try {
@@ -37,7 +46,15 @@ export default function LoginScreen({ navigation }) {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      keyboardShouldPersistTaps="handled"
+    >
       <View style={styles.heroCard}>
         <View style={styles.heroBadge}>
           <Text style={styles.heroBadgeText}>Editorial drop</Text>
@@ -61,33 +78,42 @@ export default function LoginScreen({ navigation }) {
       <View style={styles.card}>
         <View style={styles.fieldWrap}>
           <Text style={styles.fieldLabel}>Email</Text>
-          <View style={styles.inputShell}>
-            <Ionicons name="mail-outline" size={18} color="#9a3412" />
+          <View style={[styles.inputShell, errors.email ? styles.inputShellError : null]}>
+            <Ionicons name="mail-outline" size={18} color={errors.email ? "#dc2626" : "#4f46e5"} />
             <TextInput
               style={styles.input}
               placeholder="you@example.com"
               placeholderTextColor="#9ca3af"
               value={email}
-              onChangeText={setEmail}
+              onChangeText={(v) => { setEmail(v); setErrors((e) => ({ ...e, email: "" })); }}
               autoCapitalize="none"
               keyboardType="email-address"
             />
           </View>
+          {errors.email ? <Text style={styles.fieldError}>{errors.email}</Text> : null}
         </View>
 
         <View style={styles.fieldWrap}>
           <Text style={styles.fieldLabel}>Mật khẩu</Text>
-          <View style={styles.inputShell}>
-            <Ionicons name="lock-closed-outline" size={18} color="#9a3412" />
+          <View style={[styles.inputShell, errors.password ? styles.inputShellError : null]}>
+            <Ionicons name="lock-closed-outline" size={18} color={errors.password ? "#dc2626" : "#4f46e5"} />
             <TextInput
               style={styles.input}
               placeholder="Nhập mật khẩu"
               placeholderTextColor="#9ca3af"
-              secureTextEntry
+              secureTextEntry={!showPassword}
               value={password}
-              onChangeText={setPassword}
+              onChangeText={(v) => { setPassword(v); setErrors((e) => ({ ...e, password: "" })); }}
             />
+            <Pressable onPress={() => setShowPassword((v) => !v)} hitSlop={8}>
+              <Ionicons
+                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                size={18}
+                color="#94a3b8"
+              />
+            </Pressable>
           </View>
+          {errors.password ? <Text style={styles.fieldError}>{errors.password}</Text> : null}
         </View>
 
         <Pressable
@@ -110,13 +136,14 @@ export default function LoginScreen({ navigation }) {
         </Pressable>
       </View>
     </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f3f5f7",
+    backgroundColor: "#f1f5f9",
   },
   content: {
     flexGrow: 1,
@@ -125,7 +152,7 @@ const styles = StyleSheet.create({
     gap: 14,
   },
   heroCard: {
-    backgroundColor: "#111827",
+    backgroundColor: "#1e1b4b",
     borderRadius: 28,
     padding: 22,
     gap: 14,
@@ -135,24 +162,24 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 7,
-    backgroundColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(165,180,252,0.2)",
   },
   heroBadgeText: {
-    color: "#fde68a",
+    color: "#a5b4fc",
     textTransform: "uppercase",
     letterSpacing: 0.8,
     fontSize: 11,
     fontFamily: FONTS.bold,
   },
   card: {
-    backgroundColor: "#fffaf5",
+    backgroundColor: "#fff",
     borderRadius: 24,
     padding: 18,
     gap: 14,
     borderWidth: 1,
-    borderColor: "#ead9ca",
+    borderColor: "#e2e8f0",
     shadowColor: "#000",
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 3,
   },
@@ -162,7 +189,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bold,
   },
   subtitle: {
-    color: "#d1d5db",
+    color: "#c7d2fe",
     lineHeight: 20,
     fontFamily: FONTS.regular,
   },
@@ -171,11 +198,11 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 16,
     padding: 12,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "rgba(99,102,241,0.18)",
   },
   statValue: { color: "#fff", fontSize: 18, fontFamily: FONTS.bold },
   statLabel: {
-    color: "#cbd5e1",
+    color: "#c7d2fe",
     textTransform: "uppercase",
     letterSpacing: 0.6,
     fontSize: 11,
@@ -183,7 +210,7 @@ const styles = StyleSheet.create({
   },
   fieldWrap: { gap: 8 },
   fieldLabel: {
-    color: "#111827",
+    color: "#374151",
     textTransform: "uppercase",
     letterSpacing: 0.7,
     fontSize: 12,
@@ -193,8 +220,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    borderWidth: 1,
-    borderColor: "#ead9ca",
+    borderWidth: 1.5,
+    borderColor: "#e2e8f0",
     borderRadius: 16,
     paddingHorizontal: 12,
     backgroundColor: "#fff",
@@ -202,11 +229,11 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     paddingVertical: 14,
-    color: "#111827",
+    color: "#1e293b",
     fontFamily: FONTS.regular,
   },
   primaryBtn: {
-    backgroundColor: "#111827",
+    backgroundColor: "#4f46e5",
     borderRadius: 16,
     padding: 14,
     alignItems: "center",
@@ -215,11 +242,21 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   primaryBtnText: { color: "#fff", fontWeight: "700", fontFamily: FONTS.bold },
+  inputShellError: {
+    borderColor: "#dc2626",
+    backgroundColor: "#fff5f5",
+  },
+  fieldError: {
+    color: "#dc2626",
+    fontSize: 12,
+    fontFamily: FONTS.regular,
+    marginTop: -4,
+  },
   disabled: { opacity: 0.65 },
   linkWrap: { paddingTop: 4 },
   link: {
     textAlign: "center",
-    color: "#9a3412",
+    color: "#4f46e5",
     fontFamily: FONTS.medium,
   },
 });

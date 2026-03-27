@@ -97,7 +97,7 @@ export default function WishlistScreen({ navigation }) {
 
             {loading ? (
               <View style={styles.loadingRow}>
-                <ActivityIndicator size="small" color="#111827" />
+                <ActivityIndicator size="small" color="#4f46e5" />
                 <Text style={styles.loadingText}>Đang đồng bộ wishlist...</Text>
               </View>
             ) : null}
@@ -168,10 +168,10 @@ export default function WishlistScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f3f5f7", padding: 12 },
+  container: { flex: 1, backgroundColor: "#f1f5f9", padding: 12 },
   listContent: { paddingBottom: 24 },
   heroCard: {
-    backgroundColor: "#111827",
+    backgroundColor: "#1e1b4b",
     borderRadius: 24,
     padding: 18,
     gap: 10,
@@ -184,21 +184,21 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   eyebrow: {
-    color: "#fde68a",
+    color: "#a5b4fc",
     textTransform: "uppercase",
     letterSpacing: 0.8,
     fontSize: 11,
     fontFamily: FONTS.bold,
   },
   activeFilterBadge: {
-    backgroundColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(165,180,252,0.2)",
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 7,
     alignItems: "flex-end",
   },
   activeFilterBadgeEyebrow: {
-    color: "#cbd5e1",
+    color: "#c7d2fe",
     fontSize: 10,
     fontFamily: FONTS.regular,
   },
@@ -208,7 +208,7 @@ const styles = StyleSheet.create({
     fontFamily: FONTS.bold,
   },
   title: { color: "#fff", fontSize: 24, fontFamily: FONTS.bold },
-  subtitle: { color: "#d1d5db", fontFamily: FONTS.regular, lineHeight: 20 },
+  subtitle: { color: "#c7d2fe", fontFamily: FONTS.regular, lineHeight: 20 },
   heroMetrics: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -216,22 +216,22 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   metricCard: {
-    backgroundColor: "#f97316",
+    backgroundColor: "rgba(99,102,241,0.85)",
     borderRadius: 18,
     padding: 12,
     minWidth: 110,
     gap: 2,
   },
   metricCardLight: {
-    backgroundColor: "rgba(255,255,255,0.9)",
+    backgroundColor: "rgba(255,255,255,0.92)",
     borderRadius: 18,
     padding: 12,
     minWidth: 110,
     gap: 2,
   },
   metricValue: { color: "#fff", fontSize: 22, fontFamily: FONTS.bold },
-  metricLabel: { color: "#ffedd5", fontFamily: FONTS.medium, fontSize: 12 },
-  metricValueDark: { color: "#111827", fontSize: 22, fontFamily: FONTS.bold },
+  metricLabel: { color: "#c7d2fe", fontFamily: FONTS.medium, fontSize: 12 },
+  metricValueDark: { color: "#1e293b", fontSize: 22, fontFamily: FONTS.bold },
   metricLabelDark: { color: "#6b7280", fontFamily: FONTS.medium, fontSize: 12 },
   loadingRow: {
     flexDirection: "row",
@@ -253,9 +253,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: "#e2e8f0",
   },
-  filterChipActive: { backgroundColor: "#111827", borderColor: "#111827" },
+  filterChipActive: { backgroundColor: "#4f46e5", borderColor: "#4f46e5" },
   filterChipText: { color: "#374151", fontFamily: FONTS.medium, fontSize: 12 },
   filterChipTextActive: { color: "#fff" },
   emptyCard: {
@@ -265,8 +265,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 8,
     marginTop: 12,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
   },
-  emptyTitle: { color: "#111827", fontSize: 18, fontFamily: FONTS.bold },
+  emptyTitle: { color: "#1e293b", fontSize: 18, fontFamily: FONTS.bold },
   emptyText: {
     color: "#6b7280",
     textAlign: "center",
@@ -274,7 +276,7 @@ const styles = StyleSheet.create({
   },
   browseBtn: {
     marginTop: 8,
-    backgroundColor: "#111827",
+    backgroundColor: "#4f46e5",
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,

@@ -1,10 +1,11 @@
-import React from "react";
+import React, { useRef, useState } from "react";
 import {
+  ActivityIndicator,
+  Animated,
   Image,
   Pressable,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -13,6 +14,10 @@ import { useWishlist } from "../context/WishlistContext";
 
 export default function ProductCard({ product, onPress }) {
   const { isWishlisted, toggleWishlist } = useWishlist();
+  const [togglingWishlist, setTogglingWishlist] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const imgOpacity = useRef(new Animated.Value(0)).current;
   const isLowStock =
     Number(product.stock || 0) > 0 && Number(product.stock || 0) <= 5;
   const isLiked = isWishlisted(product._id);
@@ -20,13 +25,28 @@ export default function ProductCard({ product, onPress }) {
   const rating = Number(product.averageRating || 0).toFixed(1);
   const reviewCount = Number(product.reviewCount || 0);
 
+  const onPressIn = () => {
+    Animated.spring(scaleAnim, { toValue: 0.97, useNativeDriver: true, friction: 8 }).start();
+  };
+  const onPressOut = () => {
+    Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, friction: 8 }).start();
+  };
+  const onImageLoad = () => {
+    Animated.timing(imgOpacity, { toValue: 1, duration: 250, useNativeDriver: true }).start();
+    setImageLoaded(true);
+  };
+
   return (
-    <TouchableOpacity activeOpacity={0.9} style={styles.card} onPress={onPress}>
+    <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
+    <Pressable style={styles.card} onPress={onPress} onPressIn={onPressIn} onPressOut={onPressOut}>
       <View>
-        <Image
-          source={{ uri: product.image || "https://picsum.photos/200" }}
-          style={styles.image}
-        />
+        <View style={styles.imagePlaceholder}>
+          <Animated.Image
+            source={{ uri: product.image || "https://picsum.photos/200" }}
+            style={[styles.image, { opacity: imgOpacity }]}
+            onLoad={onImageLoad}
+          />
+        </View>
         <View style={styles.badgeRow}>
           <View style={styles.badgeClusterLeft}>
             <View style={styles.badgePrimary}>
@@ -48,13 +68,21 @@ export default function ProductCard({ product, onPress }) {
             </View>
             <Pressable
               style={styles.wishlistBtn}
-              onPress={() => toggleWishlist(product)}
+              onPress={async () => {
+                setTogglingWishlist(true);
+                try { await toggleWishlist(product); } finally { setTogglingWishlist(false); }
+              }}
+              disabled={togglingWishlist}
             >
-              <Ionicons
-                name={isLiked ? "heart" : "heart-outline"}
-                size={18}
-                color={isLiked ? "#dc2626" : "#111827"}
-              />
+              {togglingWishlist ? (
+                <ActivityIndicator size={14} color="#4f46e5" />
+              ) : (
+                <Ionicons
+                  name={isLiked ? "heart" : "heart-outline"}
+                  size={18}
+                  color={isLiked ? "#dc2626" : "#4f46e5"}
+                />
+              )}
             </Pressable>
             {isLowStock ? (
               <View style={styles.badgeWarn}>
@@ -68,13 +96,13 @@ export default function ProductCard({ product, onPress }) {
             <Ionicons
               name="chatbubble-ellipses-outline"
               size={12}
-              color="#111827"
+              color="#4f46e5"
             />
             <Text style={styles.imageFooterText}>{reviewCount} review</Text>
           </View>
           {isOnSale ? (
             <View style={styles.imageFooterChipWarm}>
-              <Ionicons name="pricetag-outline" size={12} color="#9a3412" />
+              <Ionicons name="pricetag-outline" size={12} color="#4f46e5" />
               <Text style={styles.imageFooterTextWarm}>Có giá ưu đãi</Text>
             </View>
           ) : null}
@@ -106,7 +134,8 @@ export default function ProductCard({ product, onPress }) {
           {product.description || "Sản phẩm demo cho môn học"}
         </Text>
       </View>
-    </TouchableOpacity>
+    </Pressable>
+    </Animated.View>
   );
 }
 
@@ -122,7 +151,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     elevation: 2,
   },
-  image: { width: "100%", height: 170, backgroundColor: "#f3f4f6" },
+  image: { width: "100%", height: 170 },
+  imagePlaceholder: { width: "100%", height: 170, backgroundColor: "#f3f4f6" },
   badgeRow: {
     position: "absolute",
     top: 12,
@@ -142,13 +172,13 @@ const styles = StyleSheet.create({
   },
   badgeClusterRight: { flexDirection: "row", alignItems: "center", gap: 6 },
   badgePrimary: {
-    backgroundColor: "#fff7ed",
+    backgroundColor: "#eef2ff",
     borderRadius: 999,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
   badgePrimaryText: {
-    color: "#c2410c",
+    color: "#4f46e5",
     fontSize: 11,
     fontFamily: FONTS.bold,
   },
@@ -177,7 +207,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 8,
     paddingVertical: 6,
   },
-  ratingPillText: { color: "#111827", fontSize: 11, fontFamily: FONTS.bold },
+  ratingPillText: { color: "#374151", fontSize: 11, fontFamily: FONTS.bold },
   wishlistBtn: {
     width: 34,
     height: 34,
@@ -208,14 +238,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 4,
-    backgroundColor: "rgba(255,247,237,0.96)",
+    backgroundColor: "rgba(238,242,255,0.96)",
     borderRadius: 999,
     paddingHorizontal: 8,
     paddingVertical: 6,
   },
-  imageFooterText: { color: "#111827", fontSize: 11, fontFamily: FONTS.medium },
+  imageFooterText: { color: "#374151", fontSize: 11, fontFamily: FONTS.medium },
   imageFooterTextWarm: {
-    color: "#9a3412",
+    color: "#4f46e5",
     fontSize: 11,
     fontFamily: FONTS.bold,
   },
@@ -227,7 +257,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textTransform: "uppercase",
     letterSpacing: 0.6,
-    color: "#9a3412",
+    color: "#4f46e5",
     fontFamily: FONTS.medium,
   },
   stock: { color: "#6b7280", fontSize: 12, fontFamily: FONTS.medium },
@@ -248,6 +278,6 @@ const styles = StyleSheet.create({
     textDecorationLine: "line-through",
     fontFamily: FONTS.regular,
   },
-  rating: { color: "#9a3412", fontFamily: FONTS.medium, fontSize: 12 },
+  rating: { color: "#4f46e5", fontFamily: FONTS.medium, fontSize: 12 },
   desc: { fontSize: 12, color: "#6b7280", fontFamily: FONTS.regular },
 });

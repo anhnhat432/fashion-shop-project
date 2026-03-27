@@ -110,6 +110,34 @@ const me = async (req, res) => {
   res.json({ success: true, data: sanitizeUser(req.user) });
 };
 
+const changePassword = async (req, res, next) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: "currentPassword and newPassword are required" });
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ success: false, message: "New password must be at least 6 characters" });
+    }
+    if (currentPassword === newPassword) {
+      return res.status(400).json({ success: false, message: "New password must differ from current password" });
+    }
+
+    const user = await User.findById(req.user._id);
+    if (!user || !(await user.matchPassword(currentPassword))) {
+      return res.status(401).json({ success: false, message: "Mật khẩu hiện tại không đúng" });
+    }
+
+    user.password = newPassword;
+    await user.save();
+
+    res.json({ success: true, message: "Password changed successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const updateMe = async (req, res, next) => {
   try {
     const name = req.body.name?.trim();
@@ -217,6 +245,7 @@ module.exports = {
   register,
   login,
   me,
+  changePassword,
   updateMe,
   getWishlist,
   addToWishlist,

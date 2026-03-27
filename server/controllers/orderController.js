@@ -1,6 +1,10 @@
 const Order = require("../models/Order");
 const Product = require("../models/Product");
+const mongoose = require("mongoose");
 const { getVoucherQuote } = require("../utils/voucherUtils");
+
+const FREE_SHIPPING_THRESHOLD = 499000;
+const SHIPPING_FEE = 30000;
 
 const ALLOWED_PAYMENT_METHODS = ["COD", "BANK_TRANSFER"];
 const ALLOWED_PAYMENT_STATUS = ["PENDING", "PAID"];
@@ -121,6 +125,15 @@ const createOrder = async (req, res, next) => {
     const productIds = [
       ...new Set(requestedItems.map((item) => String(item.productId))),
     ];
+
+    const hasInvalidObjectId = productIds.some(
+      (id) => !mongoose.Types.ObjectId.isValid(id),
+    );
+    if (hasInvalidObjectId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid product ID format" });
+    }
     const products = await Product.find({ _id: { $in: productIds } }).select(
       "name image price salePrice stock sizes colors variants",
     );
@@ -245,7 +258,7 @@ const createOrder = async (req, res, next) => {
       return res.status(400).json({ success: false, message: voucherError });
     }
 
-    const shippingFee = itemsSubtotal >= 499000 ? 0 : 30000;
+    const shippingFee = itemsSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
     const totalAmount = itemsSubtotal - discountAmount + shippingFee;
 
     const normalizedPaymentNote =

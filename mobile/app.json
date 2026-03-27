@@ -5,6 +5,11 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "platforms": ["ios", "android"],
-    "plugins": ["expo-font"]
+    "plugins": ["expo-font"],
+    "android": {
+      "package": "com.fpt.mma301.fashionshop",
+      "versionCode": 1
+    },
+    "extra": {}
   }
 }

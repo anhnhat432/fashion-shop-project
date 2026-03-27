@@ -18,9 +18,9 @@ export default function DashboardPage() {
 
       try {
         const [productsResponse, categoriesResponse, ordersResponse] = await Promise.all([
-          api.get('/products'),
+          api.get('/products', { params: { limit: 200 } }),
           api.get('/categories'),
-          api.get('/orders')
+          api.get('/orders', { params: { limit: 500 } })
         ]);
 
         setDashboard({
@@ -54,7 +54,9 @@ export default function DashboardPage() {
       count: orders.filter((item) => item.status === status).length,
     }));
 
-    const recentOrders = [...orders].slice(0, 5);
+    const recentOrders = [...orders]
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 5);
 
     const categoryCountMap = categories
       .map((category) => ({
@@ -64,8 +66,18 @@ export default function DashboardPage() {
       }))
       .sort((left, right) => right.count - left.count);
 
+    const productSalesMap = {};
+    orders.forEach((order) => {
+      if (order.status !== 'CANCELLED') {
+        (order.items || []).forEach((item) => {
+          const pid = String(item.productId?._id || item.productId || '');
+          productSalesMap[pid] = (productSalesMap[pid] || 0) + Number(item.quantity || 0);
+        });
+      }
+    });
     const bestSellingIndicator = [...products]
-      .sort((left, right) => Number(left.stock || 0) - Number(right.stock || 0))
+      .map((p) => ({ ...p, salesCount: productSalesMap[String(p._id)] || 0 }))
+      .sort((a, b) => b.salesCount - a.salesCount)
       .slice(0, 4);
 
     return {
@@ -236,16 +248,16 @@ export default function DashboardPage() {
 
           <section className="page-card analytics-card best-seller-card">
             <div className="section-head">
-              <h3>Top sản phẩm cần chú ý</h3>
-              <p className="helper">Tạm suy ra từ các item có tồn kho giảm mạnh hơn phần còn lại.</p>
-            </div>
-            <div className="best-seller-grid">
-              {summary.bestSellingIndicator.map((item) => (
-                <div className="best-seller-tile" key={item._id}>
-                  <p className="best-seller-category">{item.categoryId?.name || 'Fashion'}</p>
-                  <h4>{item.name}</h4>
-                  <p className="best-seller-price">{currency(item.price)}</p>
-                  <p className="best-seller-stock">Tồn kho hiện tại: {item.stock}</p>
+                <h3>Top bán chạy</h3>
+                <p className="helper">Dựa trên tổng số lượng đã bán (không tính đơn hủy).</p>
+              </div>
+              <div className="best-seller-grid">
+                {summary.bestSellingIndicator.map((item) => (
+                  <div className="best-seller-tile" key={item._id}>
+                    <p className="best-seller-category">{item.categoryId?.name || 'Fashion'}</p>
+                    <h4>{item.name}</h4>
+                    <p className="best-seller-price">{currency(item.price)}</p>
+                    <p className="best-seller-stock">Đã bán: {item.salesCount} • Tồn: {item.stock}</p>
                 </div>
               ))}
             </div>

@@ -6,6 +6,7 @@ import {
   Image,
   Pressable,
   ScrollView,
+  Share,
   StyleSheet,
   Text,
   TextInput,
@@ -22,10 +23,10 @@ const fallbackSizes = ["S", "M", "L"];
 const fallbackColors = ["Đen", "Trắng"];
 const reviewToneMap = {
   1: { label: "Cần cải thiện", color: "#b91c1c", bg: "#fee2e2" },
-  2: { label: "Tạm ổn", color: "#9a3412", bg: "#ffedd5" },
-  3: { label: "Ổn", color: "#92400e", bg: "#fef3c7" },
+  2: { label: "Tạm ổn", color: "#7c3aed", bg: "#ede9fe" },
+  3: { label: "Ổn", color: "#0369a1", bg: "#e0f2fe" },
   4: { label: "Rất tốt", color: "#166534", bg: "#dcfce7" },
-  5: { label: "Rất đáng mua", color: "#1d4ed8", bg: "#dbeafe" },
+  5: { label: "Rất đáng mua", color: "#4f46e5", bg: "#eef2ff" },
 };
 
 export default function ProductDetailScreen({ route, navigation }) {
@@ -44,7 +45,9 @@ export default function ProductDetailScreen({ route, navigation }) {
   const [savingReview, setSavingReview] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [sharing, setSharing] = useState(false);
   const introAnim = useRef(new Animated.Value(0)).current;
+  const mainImgOpacity = useRef(new Animated.Value(0)).current;
   const sizeOptions = useMemo(() => {
     if (product?.variants?.length) {
       return [...new Set(product.variants.map((item) => item.size))];
@@ -65,6 +68,13 @@ export default function ProductDetailScreen({ route, navigation }) {
 
     return product?.colors?.length ? product.colors : fallbackColors;
   }, [product, size]);
+
+  // Reset color khi size thay đổi nếu color hiện tại không còn hợp lệ
+  useEffect(() => {
+    if (colorOptions.length > 0 && !colorOptions.includes(color)) {
+      setColor(colorOptions[0]);
+    }
+  }, [colorOptions]);
   const activeVariant = useMemo(() => {
     if (!product?.variants?.length) {
       return null;
@@ -137,7 +147,7 @@ export default function ProductDetailScreen({ route, navigation }) {
           ? data.colors
           : fallbackColors;
       const myReview = (data.reviews || []).find(
-        (item) => item.userId === user?.id,
+        (item) => item.userId === (user?._id || user?.id),
       );
 
       setProduct(data);
@@ -341,7 +351,7 @@ export default function ProductDetailScreen({ route, navigation }) {
         : `Có sẵn ${stock} sản phẩm`;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content} scrollEventThrottle={16}>
       <Animated.View
         style={{
           opacity: introAnim,
@@ -356,7 +366,15 @@ export default function ProductDetailScreen({ route, navigation }) {
         }}
       >
         <View style={styles.mediaWrap}>
-          <Image source={{ uri: selectedImage }} style={styles.image} />
+          <View style={styles.imagePlaceholder}>
+            <Animated.Image
+              source={{ uri: selectedImage }}
+              style={[styles.image, { opacity: mainImgOpacity }]}
+              onLoad={() => {
+                Animated.timing(mainImgOpacity, { toValue: 1, duration: 300, useNativeDriver: true }).start();
+              }}
+            />
+          </View>
           <View style={styles.imageBadgeRow}>
             <View style={styles.editorBadge}>
               <Text style={styles.editorBadgeText}>Editor pick</Text>
@@ -379,11 +397,11 @@ export default function ProductDetailScreen({ route, navigation }) {
           </View>
           <View style={styles.quickInfoStrip}>
             <View style={styles.quickInfoChip}>
-              <Ionicons name="sparkles-outline" size={14} color="#111827" />
+              <Ionicons name="sparkles-outline" size={14} color="#4f46e5" />
               <Text style={styles.quickInfoText}>Minimal fit</Text>
             </View>
             <View style={styles.quickInfoChip}>
-              <Ionicons name="flash-outline" size={14} color="#111827" />
+              <Ionicons name="flash-outline" size={14} color="#4f46e5" />
               <Text style={styles.quickInfoText}>Best seller style</Text>
             </View>
           </View>
@@ -400,7 +418,11 @@ export default function ProductDetailScreen({ route, navigation }) {
               <Pressable
                 key={`${image}-${index}`}
                 style={[styles.thumbWrap, isActive && styles.thumbWrapActive]}
-                onPress={() => setActiveImage(index)}
+                onPress={() => {
+                  mainImgOpacity.setValue(0);
+                  setActiveImage(index);
+                  Animated.timing(mainImgOpacity, { toValue: 1, duration: 250, useNativeDriver: true }).start();
+                }}
               >
                 <Image source={{ uri: image }} style={styles.thumbImage} />
               </Pressable>
@@ -536,7 +558,7 @@ export default function ProductDetailScreen({ route, navigation }) {
             onPress={handleAdd}
             disabled={remainingStock <= 0}
           >
-            <Ionicons name="bag-add-outline" size={16} color="#111827" />
+            <Ionicons name="bag-add-outline" size={16} color="#4f46e5" />
             <Text style={styles.addBtnText}>Thêm vào giỏ</Text>
           </Pressable>
           <Pressable
@@ -549,6 +571,25 @@ export default function ProductDetailScreen({ route, navigation }) {
           >
             <Ionicons name="arrow-forward" size={16} color="#fff" />
             <Text style={styles.buyBtnText}>Mua ngay</Text>
+          </Pressable>
+          <Pressable
+            style={styles.shareBtn}
+            onPress={async () => {
+              if (sharing) return;
+              setSharing(true);
+              try {
+                await Share.share({
+                  message: `${product.name} - ${Number(product.salePrice || product.price || 0).toLocaleString()} đ | Fashion Shop`,
+                });
+              } catch (_) {
+                // user cancelled or share failed
+              } finally {
+                setSharing(false);
+              }
+            }}
+          >
+            <Ionicons name="share-social-outline" size={16} color="#4f46e5" />
+            <Text style={styles.shareBtnText}>Chia sẻ</Text>
           </Pressable>
         </View>
 
@@ -729,7 +770,7 @@ export default function ProductDetailScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f3f5f7" },
+  container: { flex: 1, backgroundColor: "#f1f5f9" },
   content: { padding: 12, paddingBottom: 20, gap: 10 },
   center: {
     flex: 1,
@@ -737,14 +778,20 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     gap: 8,
     padding: 16,
-    backgroundColor: "#f3f5f7",
+    backgroundColor: "#f1f5f9",
   },
   mediaWrap: { position: "relative" },
+  imagePlaceholder: {
+    width: "100%",
+    height: 320,
+    borderRadius: 22,
+    backgroundColor: "#e5e7eb",
+    overflow: "hidden",
+  },
   image: {
     width: "100%",
     height: 320,
     borderRadius: 22,
-    backgroundColor: "#eee",
   },
   imageBadgeRow: {
     position: "absolute",
@@ -773,7 +820,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  quickInfoText: { color: "#111827", fontSize: 12, fontFamily: FONTS.medium },
+  quickInfoText: { color: "#1e293b", fontSize: 12, fontFamily: FONTS.medium },
   editorBadge: {
     backgroundColor: "rgba(255,255,255,0.88)",
     borderRadius: 999,
@@ -781,7 +828,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   editorBadgeText: {
-    color: "#9a3412",
+    color: "#4f46e5",
     textTransform: "uppercase",
     letterSpacing: 0.8,
     fontSize: 11,
@@ -802,7 +849,7 @@ const styles = StyleSheet.create({
   stockBadgeText: { color: "#fff", fontSize: 11, fontFamily: FONTS.bold },
   galleryRow: { paddingTop: 2, gap: 10 },
   thumbWrap: { borderRadius: 16, padding: 4, backgroundColor: "#e5e7eb" },
-  thumbWrapActive: { backgroundColor: "#111827" },
+  thumbWrapActive: { backgroundColor: "#1e293b" },
   thumbImage: {
     width: 72,
     height: 72,
@@ -827,15 +874,15 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   categoryText: {
-    color: "#9a3412",
+    color: "#4f46e5",
     textTransform: "uppercase",
     letterSpacing: 0.8,
     fontSize: 12,
     fontFamily: FONTS.bold,
   },
   ratingText: { color: "#6b7280", fontSize: 12, fontFamily: FONTS.medium },
-  name: { fontSize: 22, color: "#111827", fontFamily: FONTS.bold },
-  price: { fontSize: 20, color: "#111827", fontFamily: FONTS.bold },
+  name: { fontSize: 22, color: "#1e293b", fontFamily: FONTS.bold },
+  price: { fontSize: 20, color: "#1e293b", fontFamily: FONTS.bold },
   oldPrice: {
     color: "#9ca3af",
     textDecorationLine: "line-through",
@@ -845,35 +892,35 @@ const styles = StyleSheet.create({
   selectionSummary: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   selectionPill: {
     borderRadius: 16,
-    backgroundColor: "#f8efe6",
+    backgroundColor: "#eef2ff",
     paddingHorizontal: 12,
     paddingVertical: 10,
     gap: 2,
   },
   selectionLabel: {
-    color: "#9a3412",
+    color: "#4f46e5",
     fontSize: 11,
     textTransform: "uppercase",
     letterSpacing: 0.6,
     fontFamily: FONTS.medium,
   },
-  selectionValue: { color: "#111827", fontFamily: FONTS.bold },
+  selectionValue: { color: "#1e293b", fontFamily: FONTS.bold },
   highlightGrid: { gap: 8 },
   highlightCard: {
-    backgroundColor: "#fff7ed",
+    backgroundColor: "#eef2ff",
     borderRadius: 16,
     padding: 12,
     borderWidth: 1,
-    borderColor: "#fdba74",
+    borderColor: "#c7d2fe",
     gap: 4,
   },
-  highlightValue: { color: "#111827", fontSize: 15, fontFamily: FONTS.bold },
+  highlightValue: { color: "#1e293b", fontSize: 15, fontFamily: FONTS.bold },
   highlightLabel: {
-    color: "#9a3412",
+    color: "#4f46e5",
     lineHeight: 18,
     fontFamily: FONTS.regular,
   },
-  label: { color: "#111827", marginTop: 4, fontFamily: FONTS.bold },
+  label: { color: "#1e293b", marginTop: 4, fontFamily: FONTS.bold },
   stockHint: { color: "#6b7280", fontFamily: FONTS.regular },
   optionRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   optionBtn: {
@@ -884,7 +931,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     backgroundColor: "#fff",
   },
-  optionBtnActive: { backgroundColor: "#111827", borderColor: "#111827" },
+  optionBtnActive: { backgroundColor: "#4f46e5", borderColor: "#4f46e5" },
   optionText: { color: "#374151", fontFamily: FONTS.medium },
   optionTextActive: { color: "#fff" },
   qtyRow: { flexDirection: "row", alignItems: "center", gap: 8 },
@@ -892,7 +939,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 10,
-    backgroundColor: "#111827",
+    backgroundColor: "#4f46e5",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -914,7 +961,7 @@ const styles = StyleSheet.create({
   },
   qtyValue: { fontSize: 18, fontFamily: FONTS.bold },
   addBtn: {
-    backgroundColor: "#f8efe6",
+    backgroundColor: "#eef2ff",
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",
@@ -923,9 +970,9 @@ const styles = StyleSheet.create({
     gap: 8,
     marginTop: 6,
   },
-  addBtnText: { color: "#111827", fontSize: 16, fontFamily: FONTS.bold },
+  addBtnText: { color: "#1e293b", fontSize: 16, fontFamily: FONTS.bold },
   buyBtn: {
-    backgroundColor: "#111827",
+    backgroundColor: "#4f46e5",
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",
@@ -934,24 +981,36 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   buyBtnText: { color: "#fff", fontSize: 16, fontFamily: FONTS.bold },
+  shareBtn: {
+    borderWidth: 1.5,
+    borderColor: "#c7d2fe",
+    borderRadius: 14,
+    paddingVertical: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
+    backgroundColor: "#eef2ff",
+  },
+  shareBtnText: { color: "#4f46e5", fontSize: 16, fontFamily: FONTS.bold },
   actionDisabled: { opacity: 0.5 },
   reviewOverviewCard: {
-    backgroundColor: "#fffaf5",
+    backgroundColor: "#fff",
     borderRadius: 18,
     padding: 14,
     borderWidth: 1,
-    borderColor: "#ead9ca",
+    borderColor: "#e2e8f0",
     gap: 12,
   },
   reviewOverviewScore: {
-    color: "#111827",
+    color: "#1e293b",
     fontSize: 28,
     fontFamily: FONTS.bold,
   },
   reviewOverviewText: { color: "#6b7280", fontFamily: FONTS.regular },
   reviewBreakdownList: { gap: 8 },
   reviewBreakdownRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  reviewBreakdownLabel: { width: 28, color: "#111827", fontFamily: FONTS.bold },
+  reviewBreakdownLabel: { width: 28, color: "#1e293b", fontFamily: FONTS.bold },
   reviewBreakdownTrack: {
     flex: 1,
     height: 8,
@@ -977,7 +1036,7 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   reviewComposerTitle: {
-    color: "#111827",
+    color: "#1e293b",
     fontFamily: FONTS.bold,
     fontSize: 16,
   },
@@ -996,15 +1055,15 @@ const styles = StyleSheet.create({
   reviewStarsRow: { flexDirection: "row", gap: 8 },
   reviewInputShell: {
     borderWidth: 1,
-    borderColor: "#ead9ca",
+    borderColor: "#e2e8f0",
     borderRadius: 14,
-    backgroundColor: "#fffaf5",
+    backgroundColor: "#fff",
     padding: 12,
   },
   reviewInput: {
     minHeight: 80,
     textAlignVertical: "top",
-    color: "#111827",
+    color: "#1e293b",
     fontFamily: FONTS.regular,
   },
   reviewCard: {
@@ -1018,14 +1077,14 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     gap: 10,
   },
-  reviewName: { color: "#111827", fontFamily: FONTS.bold },
+  reviewName: { color: "#1e293b", fontFamily: FONTS.bold },
   reviewMeta: {
     color: "#9ca3af",
     fontSize: 12,
     fontFamily: FONTS.regular,
     marginTop: 2,
   },
-  reviewRating: { color: "#9a3412", fontFamily: FONTS.bold },
+  reviewRating: { color: "#4f46e5", fontFamily: FONTS.bold },
   reviewComment: {
     color: "#6b7280",
     lineHeight: 20,
@@ -1042,7 +1101,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#f9fafb",
   },
   reviewEmptyCopy: { flex: 1, gap: 2 },
-  reviewEmptyTitle: { color: "#111827", fontFamily: FONTS.bold },
+  reviewEmptyTitle: { color: "#1e293b", fontFamily: FONTS.bold },
   reviewEmptyText: {
     color: "#6b7280",
     lineHeight: 18,
@@ -1054,7 +1113,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "center",
   },
-  relatedTitle: { fontSize: 18, color: "#111827", fontFamily: FONTS.bold },
+  relatedTitle: { fontSize: 18, color: "#1e293b", fontFamily: FONTS.bold },
   relatedMeta: { color: "#6b7280", fontFamily: FONTS.regular },
   relatedList: { gap: 12, paddingRight: 4 },
   relatedCard: {
@@ -1070,25 +1129,26 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     backgroundColor: "#eee",
   },
-  relatedCardName: { color: "#111827", fontFamily: FONTS.bold },
-  relatedCardPrice: { color: "#9a3412", fontFamily: FONTS.bold },
+  relatedCardName: { color: "#1e293b", fontFamily: FONTS.bold },
+  relatedCardPrice: { color: "#4f46e5", fontFamily: FONTS.bold },
   storyCard: {
-    backgroundColor: "#fffaf5",
+    backgroundColor: "#fff",
     borderRadius: 20,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#ead9ca",
+    borderColor: "#e2e8f0",
     gap: 8,
   },
-  storyTitle: { color: "#111827", fontSize: 17, fontFamily: FONTS.bold },
+  storyTitle: { color: "#1e293b", fontSize: 17, fontFamily: FONTS.bold },
   storyText: { color: "#6b7280", lineHeight: 20, fontFamily: FONTS.regular },
   muted: { color: "#6b7280", fontFamily: FONTS.regular },
   error: { color: "#b91c1c", textAlign: "center", fontFamily: FONTS.regular },
   retryBtn: {
-    backgroundColor: "#111827",
+    backgroundcolor: "#1e293b",
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
   retryText: { color: "#fff", fontFamily: FONTS.bold },
 });
+

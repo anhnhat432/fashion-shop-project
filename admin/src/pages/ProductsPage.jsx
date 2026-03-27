@@ -48,7 +48,7 @@ export default function ProductsPage() {
     setLoading(true);
     setError('');
     try {
-      const [pRes, cRes] = await Promise.all([api.get('/products'), api.get('/categories')]);
+      const [pRes, cRes] = await Promise.all([api.get('/products', { params: { limit: 200 } }), api.get('/categories')]);
       setProducts(pRes.data.data || []);
       setCategories(cRes.data.data || []);
     } catch (err) {

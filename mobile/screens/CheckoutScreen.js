@@ -13,6 +13,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useCart } from "../context/CartContext";
 import api from "../services/api";
 import { FONTS } from "../constants/fonts";
+import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "../constants/shop";
 
 const onlyDigits = (value) => value.replace(/\D/g, "");
 
@@ -38,7 +39,7 @@ export default function CheckoutScreen({ navigation }) {
       ),
     [cartItems],
   );
-  const shippingFee = subtotal >= 499000 ? 0 : 30000;
+  const shippingFee = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
   const discountAmount = Number(appliedVoucher?.discountAmount || 0);
   const finalTotal = subtotal - discountAmount + shippingFee;
   const itemCount = useMemo(
@@ -161,7 +162,7 @@ export default function CheckoutScreen({ navigation }) {
               <Text style={styles.heroEyebrow}>Final step</Text>
               <Text style={styles.heroTitle}>Xác nhận đơn hàng của bạn.</Text>
             </View>
-            <Ionicons name="card-outline" size={24} color="#fde68a" />
+            <Ionicons name="card-outline" size={24} color="#a5b4fc" />
           </View>
           <Text style={styles.heroSubtitle}>
             Kiểm tra thông tin giao hàng, chọn cách thanh toán và hoàn tất đơn
@@ -184,7 +185,7 @@ export default function CheckoutScreen({ navigation }) {
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Thông tin nhận hàng</Text>
           <View style={styles.inputShell}>
-            <Ionicons name="location-outline" size={18} color="#9a3412" />
+            <Ionicons name="location-outline" size={18} color="#4f46e5" />
             <TextInput
               style={styles.input}
               placeholder="Địa chỉ nhận hàng"
@@ -194,7 +195,7 @@ export default function CheckoutScreen({ navigation }) {
             />
           </View>
           <View style={styles.inputShell}>
-            <Ionicons name="call-outline" size={18} color="#9a3412" />
+            <Ionicons name="call-outline" size={18} color="#4f46e5" />
             <TextInput
               style={styles.input}
               placeholder="Số điện thoại"
@@ -220,7 +221,7 @@ export default function CheckoutScreen({ navigation }) {
               }}
             >
               <View style={styles.paymentMethodHead}>
-                <Ionicons name="cash-outline" size={18} color="#111827" />
+                <Ionicons name="cash-outline" size={18} color="#4f46e5" />
                 <Text style={styles.paymentMethodTitle}>COD</Text>
               </View>
               <Text style={styles.paymentMethodMeta}>
@@ -237,7 +238,7 @@ export default function CheckoutScreen({ navigation }) {
               onPress={() => setPaymentMethod("BANK_TRANSFER")}
             >
               <View style={styles.paymentMethodHead}>
-                <Ionicons name="business-outline" size={18} color="#111827" />
+                <Ionicons name="business-outline" size={18} color="#4f46e5" />
                 <Text style={styles.paymentMethodTitle}>BANK_TRANSFER</Text>
               </View>
               <Text style={styles.paymentMethodMeta}>
@@ -307,7 +308,7 @@ export default function CheckoutScreen({ navigation }) {
           <Text style={styles.sectionTitle}>Voucher ưu đãi</Text>
           <View style={styles.voucherRow}>
             <View style={[styles.inputShell, styles.voucherInputShell]}>
-              <Ionicons name="pricetag-outline" size={18} color="#9a3412" />
+              <Ionicons name="pricetag-outline" size={18} color="#4f46e5" />
               <TextInput
                 style={styles.input}
                 placeholder="Nhập mã voucher"
@@ -393,10 +394,10 @@ export default function CheckoutScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f3f5f7" },
+  container: { flex: 1, backgroundColor: "#f1f5f9" },
   content: { padding: 16, gap: 12, paddingBottom: 28 },
   heroCard: {
-    backgroundColor: "#111827",
+    backgroundColor: "#1e1b4b",
     borderRadius: 24,
     padding: 18,
     gap: 12,
@@ -404,7 +405,7 @@ const styles = StyleSheet.create({
   },
   heroTop: { flexDirection: "row", justifyContent: "space-between", gap: 12 },
   heroEyebrow: {
-    color: "#fde68a",
+    color: "#a5b4fc",
     textTransform: "uppercase",
     letterSpacing: 0.8,
     fontSize: 11,
@@ -416,64 +417,66 @@ const styles = StyleSheet.create({
     lineHeight: 32,
     fontFamily: FONTS.bold,
   },
-  heroSubtitle: { color: "#d1d5db", lineHeight: 20, fontFamily: FONTS.regular },
+  heroSubtitle: { color: "#c7d2fe", lineHeight: 20, fontFamily: FONTS.regular },
   heroStats: { flexDirection: "row", gap: 10 },
   heroStatCard: {
     flex: 1,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "rgba(99,102,241,0.18)",
     borderRadius: 16,
     padding: 12,
   },
   heroStatValue: { color: "#fff", fontFamily: FONTS.bold },
-  heroStatLabel: { color: "#cbd5e1", fontSize: 12, fontFamily: FONTS.regular },
+  heroStatLabel: { color: "#c7d2fe", fontSize: 12, fontFamily: FONTS.regular },
   card: {
     backgroundColor: "#fff",
     borderRadius: 16,
     padding: 14,
     gap: 10,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
   },
-  sectionTitle: { fontSize: 16, color: "#111827", fontFamily: FONTS.bold },
+  sectionTitle: { fontSize: 16, color: "#1e293b", fontFamily: FONTS.bold },
   inputShell: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    borderWidth: 1,
-    borderColor: "#ead9ca",
+    borderWidth: 1.5,
+    borderColor: "#e2e8f0",
     borderRadius: 14,
     paddingHorizontal: 12,
-    backgroundColor: "#fffaf5",
+    backgroundColor: "#fff",
   },
   input: {
     flex: 1,
     paddingVertical: 13,
-    color: "#111827",
+    color: "#1e293b",
     fontFamily: FONTS.regular,
   },
   paymentMethodColumn: { gap: 10 },
   paymentMethodCard: {
     borderWidth: 1,
-    borderColor: "#d1d5db",
+    borderColor: "#e2e8f0",
     borderRadius: 14,
     padding: 12,
     gap: 4,
   },
   paymentMethodCardActive: {
-    borderColor: "#111827",
-    backgroundColor: "#f9fafb",
+    borderColor: "#4f46e5",
+    backgroundColor: "#eef2ff",
   },
   paymentMethodHead: { flexDirection: "row", alignItems: "center", gap: 8 },
-  paymentMethodTitle: { color: "#111827", fontFamily: FONTS.bold },
+  paymentMethodTitle: { color: "#1e293b", fontFamily: FONTS.bold },
   paymentMethodMeta: { color: "#6b7280", fontFamily: FONTS.regular },
   transferCard: {
-    backgroundColor: "#fff7ed",
+    backgroundColor: "#eef2ff",
     borderRadius: 14,
     padding: 12,
     gap: 8,
     borderWidth: 1,
-    borderColor: "#fdba74",
+    borderColor: "#c7d2fe",
   },
-  transferTitle: { color: "#9a3412", fontFamily: FONTS.bold },
-  transferLine: { color: "#7c2d12", fontFamily: FONTS.regular },
+  transferTitle: { color: "#4f46e5", fontFamily: FONTS.bold },
+  transferLine: { color: "#4338ca", fontFamily: FONTS.regular },
   confirmBox: {
     flexDirection: "row",
     alignItems: "center",
@@ -482,9 +485,9 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
     padding: 10,
     borderWidth: 1,
-    borderColor: "#fed7aa",
+    borderColor: "#e2e8f0",
   },
-  confirmBoxActive: { borderColor: "#111827" },
+  confirmBoxActive: { borderColor: "#4f46e5" },
   checkbox: {
     width: 22,
     height: 22,
@@ -494,13 +497,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  checkboxActive: { backgroundColor: "#111827", borderColor: "#111827" },
+  checkboxActive: { backgroundColor: "#4f46e5", borderColor: "#4f46e5" },
   checkboxTick: { color: "#fff", fontFamily: FONTS.bold },
-  confirmText: { flex: 1, color: "#111827", fontFamily: FONTS.medium },
+  confirmText: { flex: 1, color: "#1e293b", fontFamily: FONTS.medium },
   voucherRow: { flexDirection: "row", gap: 8, alignItems: "center" },
   voucherInputShell: { flex: 1 },
   applyBtn: {
-    backgroundColor: "#111827",
+    backgroundColor: "#4f46e5",
     borderRadius: 12,
     paddingHorizontal: 14,
     paddingVertical: 14,
@@ -518,11 +521,11 @@ const styles = StyleSheet.create({
   orderPreviewRow: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
   orderPreviewChip: {
     borderRadius: 999,
-    backgroundColor: "#f8efe6",
+    backgroundColor: "#eef2ff",
     paddingHorizontal: 12,
     paddingVertical: 8,
   },
-  orderPreviewText: { color: "#9a3412", fontFamily: FONTS.medium },
+  orderPreviewText: { color: "#4f46e5", fontFamily: FONTS.medium },
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -530,17 +533,17 @@ const styles = StyleSheet.create({
   },
   summaryRowTotal: {
     borderTopWidth: 1,
-    borderTopColor: "#e5e7eb",
+    borderTopColor: "#e2e8f0",
     paddingTop: 10,
     marginTop: 4,
   },
   summaryLabel: { color: "#6b7280", fontFamily: FONTS.regular },
-  summaryValue: { color: "#111827", fontFamily: FONTS.medium },
+  summaryValue: { color: "#1e293b", fontFamily: FONTS.medium },
   summaryDiscount: { color: "#166534", fontFamily: FONTS.bold },
-  summaryTotalLabel: { color: "#111827", fontFamily: FONTS.bold },
-  summaryTotalValue: { color: "#111827", fontSize: 18, fontFamily: FONTS.bold },
+  summaryTotalLabel: { color: "#1e293b", fontFamily: FONTS.bold },
+  summaryTotalValue: { color: "#1e293b", fontSize: 18, fontFamily: FONTS.bold },
   submitBtn: {
-    backgroundColor: "#111827",
+    backgroundColor: "#4f46e5",
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",

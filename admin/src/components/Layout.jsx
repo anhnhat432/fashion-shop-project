@@ -2,11 +2,12 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const menus = [
-  { to: '/', label: 'Dashboard', mark: 'DB' },
-  { to: '/products', label: 'Products', mark: 'PR' },
-  { to: '/categories', label: 'Categories', mark: 'CT' },
-  { to: '/orders', label: 'Orders', mark: 'OD' },
-  { to: '/vouchers', label: 'Vouchers', mark: 'VC' }
+  { to: '/', label: 'Dashboard', icon: '⎈' },
+  { to: '/products', label: 'Products', icon: '🛍' },
+  { to: '/categories', label: 'Categories', icon: '◈' },
+  { to: '/orders', label: 'Orders', icon: '📦' },
+  { to: '/vouchers', label: 'Vouchers', icon: '🎫' },
+  { to: '/users', label: 'Users', icon: '👤' }
 ];
 
 export default function Layout({ children }) {
@@ -23,13 +24,16 @@ export default function Layout({ children }) {
         <nav className="sidebar-nav">
           {menus.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.to === '/'} className={({ isActive }) => (isActive ? 'active' : '')}>
-              <span className="menu-mark">{item.mark}</span>
+              <span className="menu-mark">{item.icon}</span>
               <span>{item.label}</span>
             </NavLink>
           ))}
         </nav>
 
-        <button className="logout-btn" onClick={logout}>Đăng xuất</button>
+        <button className="logout-btn" onClick={logout}>
+          <span>⬡</span>
+          Đăng xuất
+        </button>
       </aside>
       <main className="content">{children}</main>
     </div>

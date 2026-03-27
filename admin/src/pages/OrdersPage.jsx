@@ -27,6 +27,8 @@ export default function OrdersPage() {
   const [updatingPaymentId, setUpdatingPaymentId] = useState('');
   const [error, setError] = useState('');
   const [paymentFilter, setPaymentFilter] = useState('ALL');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -72,12 +74,43 @@ export default function OrdersPage() {
   };
 
   const filteredOrders = orders.filter((order) => {
-    if (paymentFilter === 'ALL') {
-      return true;
+    if (paymentFilter !== 'ALL' && (order.paymentStatus || 'PENDING') !== paymentFilter) return false;
+    if (statusFilter !== 'ALL' && order.status !== statusFilter) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase();
+      const name = (order.userId?.name || '').toLowerCase();
+      const email = (order.userId?.email || '').toLowerCase();
+      const ref = (order.transferReference || '').toLowerCase();
+      const shortId = order._id.slice(-8).toLowerCase();
+      if (!name.includes(q) && !email.includes(q) && !ref.includes(q) && !shortId.includes(q)) return false;
     }
-
-    return (order.paymentStatus || 'PENDING') === paymentFilter;
+    return true;
   });
+
+  const exportCSV = () => {
+    const headers = ['STT', 'Khách hàng', 'Tổng tiền', 'Thanh toán', 'TT thanh toán', 'Trạng thái', 'Ngày tạo'];
+    const rows = filteredOrders.map((o, idx) => [
+      idx + 1,
+      o.userId?.name || 'N/A',
+      Number(o.totalAmount || 0),
+      o.paymentMethod || 'COD',
+      o.paymentStatus || 'PENDING',
+      o.status,
+      new Date(o.createdAt).toLocaleDateString('vi-VN')
+    ]);
+
+    const csv = [headers, ...rows]
+      .map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `orders_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const getStatusOptions = (currentStatus) => allowedStatusTransitions[currentStatus] || statuses;
 
@@ -94,6 +127,28 @@ export default function OrdersPage() {
         <>
           <div className="table-toolbar order-toolbar">
             <div className="filter-group">
+              <input
+                className="order-search-input"
+                type="text"
+                placeholder="Tìm theo tên, ID đơn, mã CK..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <div className="filter-group">
+              <span className="helper">Lọc TT đơn</span>
+              <select
+                className="order-status-select"
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+              >
+                <option value="ALL">Tất cả</option>
+                {statuses.map((s) => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+            <div className="filter-group">
               <span className="helper">Lọc thanh toán</span>
               <select
                 className="order-status-select payment-filter-select"
@@ -107,6 +162,9 @@ export default function OrdersPage() {
                 ))}
               </select>
             </div>
+            <button className="export-csv-btn" onClick={exportCSV}>
+              ↓ Xuất CSV ({filteredOrders.length})
+            </button>
           </div>
 
           <div className="page-card table-wrap">

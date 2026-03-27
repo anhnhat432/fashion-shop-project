@@ -9,6 +9,7 @@ import ProductDetailScreen from "../screens/ProductDetailScreen";
 import CheckoutScreen from "../screens/CheckoutScreen";
 import OrderHistoryScreen from "../screens/OrderHistoryScreen";
 import WishlistScreen from "../screens/WishlistScreen";
+import ChangePasswordScreen from "../screens/ChangePasswordScreen";
 import { FONTS } from "../constants/fonts";
 
 const Stack = createNativeStackNavigator();
@@ -37,14 +38,14 @@ export default function RootNavigator() {
       screenOptions={{
         animation: "slide_from_right",
         headerShadowVisible: false,
-        headerStyle: { backgroundColor: "#f8efe6" },
+        headerStyle: { backgroundColor: "#fff" },
         headerTitleStyle: {
           fontFamily: FONTS.bold,
           fontSize: 18,
-          color: "#111827",
+          color: "#1e293b",
         },
-        headerTintColor: "#111827",
-        contentStyle: { backgroundColor: "#f3f5f7" },
+        headerTintColor: "#4f46e5",
+        contentStyle: { backgroundColor: "#f1f5f9" },
       }}
     >
       {!user ? (
@@ -86,6 +87,11 @@ export default function RootNavigator() {
             name="Wishlist"
             component={WishlistScreen}
             options={{ title: "Wishlist" }}
+          />
+          <Stack.Screen
+            name="ChangePassword"
+            component={ChangePasswordScreen}
+            options={{ title: "Đổi mật khẩu" }}
           />
         </>
       )}

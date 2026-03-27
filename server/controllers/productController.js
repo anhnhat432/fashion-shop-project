@@ -1,6 +1,8 @@
 const Product = require("../models/Product");
 const Category = require("../models/Category");
 
+const escapeRegex = (str) => str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
 const normalizeVariants = (variants) => {
   if (!Array.isArray(variants)) return [];
 
@@ -40,21 +42,29 @@ const enrichProduct = (product) => {
   };
 };
 
-const normalizePayload = (payload) => ({
-  ...payload,
-  name: payload.name?.trim(),
-  price: payload.price !== undefined ? Number(payload.price) : undefined,
-  salePrice:
-    payload.salePrice !== undefined &&
-    payload.salePrice !== null &&
-    payload.salePrice !== ""
-      ? Number(payload.salePrice)
-      : null,
-  stock: payload.stock !== undefined ? Number(payload.stock) : undefined,
-  sizes: Array.isArray(payload.sizes) ? payload.sizes : [],
-  colors: Array.isArray(payload.colors) ? payload.colors : [],
-  variants: normalizeVariants(payload.variants),
-});
+const normalizePayload = (payload) => {
+  let image = payload.image?.trim() || "";
+  // Chỉ chấp nhận URL http/https
+  if (image && !/^https?:\/\/.+/.test(image)) {
+    image = "";
+  }
+  return {
+    ...payload,
+    name: payload.name?.trim(),
+    image,
+    price: payload.price !== undefined ? Number(payload.price) : undefined,
+    salePrice:
+      payload.salePrice !== undefined &&
+      payload.salePrice !== null &&
+      payload.salePrice !== ""
+        ? Number(payload.salePrice)
+        : null,
+    stock: payload.stock !== undefined ? Number(payload.stock) : undefined,
+    sizes: Array.isArray(payload.sizes) ? payload.sizes : [],
+    colors: Array.isArray(payload.colors) ? payload.colors : [],
+    variants: normalizeVariants(payload.variants),
+  };
+};
 
 const ensureCategoryExists = async (categoryId) => {
   if (!categoryId) return false;
@@ -63,11 +73,11 @@ const ensureCategoryExists = async (categoryId) => {
 
 const getProducts = async (req, res, next) => {
   try {
-    const { search, categoryId, sort, inStock } = req.query;
+    const { search, categoryId, sort, inStock, page, limit } = req.query;
     const query = {};
     let sortQuery = { createdAt: -1 };
 
-    if (search) query.name = { $regex: search, $options: "i" };
+    if (search) query.name = { $regex: escapeRegex(search.trim()), $options: "i" };
     if (categoryId) query.categoryId = categoryId;
     if (inStock === "true") query.stock = { $gt: 0 };
 
@@ -79,10 +89,29 @@ const getProducts = async (req, res, next) => {
       sortQuery = { name: 1, createdAt: -1 };
     }
 
-    const products = await Product.find(query)
-      .populate("categoryId", "name")
-      .sort(sortQuery);
-    res.json({ success: true, data: products.map(enrichProduct) });
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+    const skip = (pageNum - 1) * limitNum;
+
+    const [products, total] = await Promise.all([
+      Product.find(query)
+        .populate("categoryId", "name")
+        .sort(sortQuery)
+        .skip(skip)
+        .limit(limitNum),
+      Product.countDocuments(query),
+    ]);
+
+    res.json({
+      success: true,
+      data: products.map(enrichProduct),
+      pagination: {
+        page: pageNum,
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -119,7 +148,7 @@ const createProduct = async (req, res, next) => {
       payload.salePrice !== null &&
       (Number.isNaN(payload.salePrice) ||
         payload.salePrice <= 0 ||
-        payload.salePrice >= payload.price)
+        payload.salePrice > payload.price)
     ) {
       return res
         .status(400)

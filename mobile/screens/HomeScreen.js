@@ -1,9 +1,10 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Animated,
   FlatList,
   Pressable,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -33,12 +34,18 @@ export default function HomeScreen({ navigation }) {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([allCategory]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [sortKey, setSortKey] = useState("newest");
   const [inStockOnly, setInStockOnly] = useState(false);
   const [error, setError] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
   const revealAnim = useRef(new Animated.Value(0)).current;
+  const debounceTimer = useRef(null);
 
   const fetchCategories = async () => {
     try {
@@ -54,26 +61,42 @@ export default function HomeScreen({ navigation }) {
     nextCategoryId = selectedCategoryId,
     nextSortKey = sortKey,
     nextInStockOnly = inStockOnly,
+    pageNum = 1,
+    append = false,
   ) => {
-    setLoading(true);
+    if (append) setLoadingMore(true);
+    else setLoading(true);
     setError("");
     try {
-      const params = { search: nextSearch.trim(), sort: nextSortKey };
+      const params = { search: nextSearch.trim(), sort: nextSortKey, page: pageNum, limit: 10 };
       if (nextCategoryId) params.categoryId = nextCategoryId;
       if (nextInStockOnly) params.inStock = true;
       const res = await api.get("/products", { params });
-      setProducts(res.data.data || []);
+      const newProducts = res.data.data || [];
+      const pag = res.data.pagination || {};
+      if (append) {
+        setProducts((prev) => [...prev, ...newProducts]);
+      } else {
+        setProducts(newProducts);
+        setPage(1);
+      }
+      setTotal(pag.total || newProducts.length);
+      setHasMore(pageNum < (pag.totalPages || 1));
     } catch (err) {
       setError(err.response?.data?.message || "Không tải được sản phẩm");
-      setProducts([]);
+      if (!append) setProducts([]);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
   };
 
   useEffect(() => {
     fetchCategories();
     fetchProducts("", "", "newest", false);
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
   }, []);
 
   useEffect(() => {
@@ -90,6 +113,31 @@ export default function HomeScreen({ navigation }) {
   const onSearch = () => {
     fetchProducts(search, selectedCategoryId, sortKey, inStockOnly);
   };
+
+  // Debounce: tự động search sau 500ms khi user gõ
+  const onSearchTextChange = useCallback((text) => {
+    setSearch(text);
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    debounceTimer.current = setTimeout(() => {
+      fetchProducts(text, selectedCategoryId, sortKey, inStockOnly);
+    }, 500);
+  }, [selectedCategoryId, sortKey, inStockOnly]);
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await Promise.all([
+      fetchCategories(),
+      fetchProducts(search, selectedCategoryId, sortKey, inStockOnly, 1, false),
+    ]);
+    setRefreshing(false);
+  }, [search, selectedCategoryId, sortKey, inStockOnly]);
+
+  const loadMore = useCallback(() => {
+    if (loadingMore || !hasMore) return;
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchProducts(search, selectedCategoryId, sortKey, inStockOnly, nextPage, true);
+  }, [loadingMore, hasMore, page, search, selectedCategoryId, sortKey, inStockOnly]);
 
   const onSelectCategory = (categoryId) => {
     setSelectedCategoryId(categoryId);
@@ -181,7 +229,7 @@ export default function HomeScreen({ navigation }) {
         </View>
       </View>
 
-      <SearchBar value={search} onChangeText={setSearch} onSearch={onSearch} />
+      <SearchBar value={search} onChangeText={onSearchTextChange} onSearch={onSearch} />
 
       <CategoryList
         categories={categories}
@@ -242,7 +290,7 @@ export default function HomeScreen({ navigation }) {
           onPress={() => navigation.navigate("Cart")}
         >
           <View style={styles.actionIconWrap}>
-            <Ionicons name="cart-outline" size={18} color="#111827" />
+            <Ionicons name="cart-outline" size={18} color="#4f46e5" />
           </View>
           <View style={styles.actionCopyWrap}>
             <Text style={styles.actionText}>Giỏ hàng</Text>
@@ -254,7 +302,14 @@ export default function HomeScreen({ navigation }) {
           onPress={() => navigation.getParent()?.navigate("Wishlist")}
         >
           <View style={styles.actionIconWrap}>
-            <Ionicons name="heart-outline" size={18} color="#111827" />
+            <Ionicons name="heart-outline" size={18} color="#4f46e5" />
+            {wishlistCount > 0 ? (
+              <View style={styles.actionBadge}>
+                <Text style={styles.actionBadgeText}>
+                  {wishlistCount > 99 ? "99+" : wishlistCount}
+                </Text>
+              </View>
+            ) : null}
           </View>
           <View style={styles.actionCopyWrap}>
             <Text style={styles.actionText}>Wishlist</Text>
@@ -295,7 +350,7 @@ export default function HomeScreen({ navigation }) {
               {Number(topRatedProduct.reviewCount || 0)} đánh giá
             </Text>
           </View>
-          <Ionicons name="arrow-forward" size={18} color="#111827" />
+          <Ionicons name="arrow-forward" size={18} color="#4f46e5" />
         </Pressable>
       ) : null}
 
@@ -305,7 +360,7 @@ export default function HomeScreen({ navigation }) {
           onPress={() => navigation.navigate("Profile")}
         >
           <View style={styles.actionIconWrap}>
-            <Ionicons name="person-outline" size={18} color="#111827" />
+            <Ionicons name="person-outline" size={18} color="#4f46e5" />
           </View>
           <View style={styles.actionCopyWrap}>
             <Text style={styles.actionText}>Tài khoản</Text>
@@ -356,7 +411,7 @@ export default function HomeScreen({ navigation }) {
 
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Danh sách sản phẩm</Text>
-        <Text style={styles.sectionMeta}>{products.length} kết quả</Text>
+        <Text style={styles.sectionMeta}>{total} kết quả</Text>
       </View>
     </View>
   );
@@ -429,6 +484,30 @@ export default function HomeScreen({ navigation }) {
             contentContainerStyle={styles.listContent}
             ListHeaderComponent={renderHeader}
             ListEmptyComponent={renderEmptyState()}
+            onEndReached={loadMore}
+            onEndReachedThreshold={0.4}
+            removeClippedSubviews
+            windowSize={10}
+            maxToRenderPerBatch={6}
+            initialNumToRender={6}
+            ListFooterComponent={
+              loadingMore ? (
+                <View style={styles.loadMoreWrap}>
+                  <ActivityIndicator size="small" color="#4f46e5" />
+                  <Text style={styles.loadMoreText}>Đang tải thêm...</Text>
+                </View>
+              ) : !hasMore && products.length > 0 ? (
+                <Text style={styles.allLoadedText}>Đã hiển thị đầy đủ {total} sản phẩm</Text>
+              ) : null
+            }
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                tintColor="#4f46e5"
+                colors={["#4f46e5"]}
+              />
+            }
             renderItem={({ item }) => (
               <ProductCard
                 product={item}
@@ -443,10 +522,10 @@ export default function HomeScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 12, gap: 10, backgroundColor: "#f3f5f7" },
+  container: { flex: 1, padding: 12, gap: 10, backgroundColor: "#f1f5f9" },
   headerWrap: { gap: 14, paddingBottom: 14 },
   heroCard: {
-    backgroundColor: "#111827",
+    backgroundColor: "#1e1b4b",
     borderRadius: 24,
     padding: 18,
     gap: 14,
@@ -457,13 +536,15 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   heroPill: {
-    backgroundColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(129,140,248,0.2)",
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 7,
+    borderWidth: 1,
+    borderColor: "rgba(129,140,248,0.3)",
   },
   heroPillText: {
-    color: "#fde68a",
+    color: "#a5b4fc",
     textTransform: "uppercase",
     letterSpacing: 0.8,
     fontSize: 11,
@@ -496,11 +577,13 @@ const styles = StyleSheet.create({
   heroStatsRow: { flexDirection: "row", gap: 10 },
   heroStatCard: {
     flex: 1,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "rgba(99,102,241,0.18)",
     borderRadius: 16,
     paddingVertical: 12,
     paddingHorizontal: 10,
     gap: 4,
+    borderWidth: 1,
+    borderColor: "rgba(129,140,248,0.2)",
   },
   heroStatValue: {
     color: "#fff",
@@ -512,7 +595,7 @@ const styles = StyleSheet.create({
   signalRow: { flexDirection: "row", gap: 10 },
   signalCardDark: {
     flex: 1,
-    backgroundColor: "#111827",
+    backgroundColor: "#1e1b4b",
     borderRadius: 18,
     padding: 14,
     gap: 4,
@@ -523,15 +606,15 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 14,
     gap: 4,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderWidth: 1.5,
+    borderColor: "#e2e8f0",
   },
   signalLabelLight: {
     color: "#cbd5e1",
     fontSize: 12,
     fontFamily: FONTS.medium,
   },
-  signalValueLight: { color: "#fff", fontSize: 24, fontFamily: FONTS.bold },
+  signalValueLight: { color: "#a5b4fc", fontSize: 24, fontFamily: FONTS.bold },
   signalMetaLight: {
     color: "#d1d5db",
     fontSize: 12,
@@ -541,9 +624,9 @@ const styles = StyleSheet.create({
   signalValue: { color: "#111827", fontSize: 24, fontFamily: FONTS.bold },
   signalMeta: { color: "#6b7280", fontSize: 12, fontFamily: FONTS.regular },
   reviewSpotlight: {
-    backgroundColor: "#fff7ed",
-    borderWidth: 1,
-    borderColor: "#fdba74",
+    backgroundColor: "#eef2ff",
+    borderWidth: 1.5,
+    borderColor: "#c7d2fe",
     borderRadius: 18,
     padding: 14,
     flexDirection: "row",
@@ -552,20 +635,20 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   reviewSpotlightEyebrow: {
-    color: "#9a3412",
+    color: "#4f46e5",
     fontSize: 11,
     textTransform: "uppercase",
     letterSpacing: 0.6,
     fontFamily: FONTS.bold,
   },
   reviewSpotlightTitle: {
-    color: "#111827",
+    color: "#1e1b4b",
     fontSize: 16,
     fontFamily: FONTS.bold,
     marginTop: 4,
   },
   reviewSpotlightMeta: {
-    color: "#9a3412",
+    color: "#4f46e5",
     marginTop: 4,
     fontFamily: FONTS.medium,
   },
@@ -573,17 +656,17 @@ const styles = StyleSheet.create({
   sortList: { gap: 8, paddingRight: 8 },
   sortChip: {
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 9,
     borderRadius: 999,
     backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderWidth: 1.5,
+    borderColor: "#e2e8f0",
   },
   sortChipActive: {
-    backgroundColor: "#111827",
-    borderColor: "#111827",
+    backgroundColor: "#4f46e5",
+    borderColor: "#4f46e5",
   },
-  sortChipText: { color: "#374151", fontFamily: FONTS.medium },
+  sortChipText: { color: "#475569", fontFamily: FONTS.medium, fontSize: 13 },
   sortChipTextActive: { color: "#fff" },
   stockToggle: {
     flexDirection: "row",
@@ -591,22 +674,22 @@ const styles = StyleSheet.create({
     gap: 8,
     alignSelf: "flex-start",
     paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingVertical: 9,
     borderRadius: 999,
     backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderWidth: 1.5,
+    borderColor: "#e2e8f0",
   },
-  stockToggleActive: { backgroundColor: "#dcfce7", borderColor: "#86efac" },
-  stockToggleText: { color: "#374151", fontFamily: FONTS.medium },
-  stockToggleTextActive: { color: "#166534" },
+  stockToggleActive: { backgroundColor: "#f0fdf4", borderColor: "#86efac" },
+  stockToggleText: { color: "#475569", fontFamily: FONTS.medium, fontSize: 13 },
+  stockToggleTextActive: { color: "#16a34a" },
   actionBtn: {
     flex: 1,
     backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
-    borderRadius: 12,
-    paddingVertical: 10,
+    borderWidth: 1.5,
+    borderColor: "#e2e8f0",
+    borderRadius: 14,
+    paddingVertical: 11,
     flexDirection: "row",
     gap: 10,
     paddingHorizontal: 12,
@@ -615,9 +698,27 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 12,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "#eef2ff",
     alignItems: "center",
     justifyContent: "center",
+  },
+  actionBadge: {
+    position: "absolute",
+    top: -4,
+    right: -4,
+    backgroundColor: "#4f46e5",
+    borderRadius: 999,
+    minWidth: 16,
+    height: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 3,
+  },
+  actionBadgeText: {
+    color: "#fff",
+    fontSize: 9,
+    fontFamily: FONTS.bold,
+    lineHeight: 12,
   },
   actionCopyWrap: {
     flex: 1,
@@ -628,34 +729,34 @@ const styles = StyleSheet.create({
   featuredList: { paddingRight: 8, gap: 10 },
   featuredCard: {
     width: 170,
-    backgroundColor: "#fff7ed",
+    backgroundColor: "#eef2ff",
     borderRadius: 18,
     padding: 14,
     gap: 8,
-    borderWidth: 1,
-    borderColor: "#fdba74",
+    borderWidth: 1.5,
+    borderColor: "#c7d2fe",
   },
   featuredEyebrow: {
-    color: "#c2410c",
+    color: "#4f46e5",
     fontSize: 11,
     letterSpacing: 0.8,
     textTransform: "uppercase",
     fontFamily: FONTS.bold,
   },
   featuredName: {
-    color: "#111827",
+    color: "#0f172a",
     fontSize: 16,
     lineHeight: 22,
     fontFamily: FONTS.bold,
   },
-  featuredPrice: { color: "#111827", fontSize: 18, fontFamily: FONTS.bold },
+  featuredPrice: { color: "#4f46e5", fontSize: 18, fontFamily: FONTS.bold },
   featuredMetaRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     gap: 8,
   },
-  featuredMeta: { color: "#9a3412", fontFamily: FONTS.medium },
-  featuredReview: { color: "#111827", fontFamily: FONTS.bold },
+  featuredMeta: { color: "#6366f1", fontFamily: FONTS.medium },
+  featuredReview: { color: "#0f172a", fontFamily: FONTS.bold },
   sectionHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -687,6 +788,21 @@ const styles = StyleSheet.create({
   skeletonProduct: { width: "100%", height: 250, borderRadius: 18 },
   muted: { color: "#6b7280", fontFamily: FONTS.regular },
   listContent: { paddingTop: 2, paddingBottom: 20 },
+  loadMoreWrap: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 16,
+  },
+  loadMoreText: { color: "#6b7280", fontFamily: FONTS.medium, fontSize: 13 },
+  allLoadedText: {
+    textAlign: "center",
+    color: "#9ca3af",
+    fontFamily: FONTS.regular,
+    fontSize: 13,
+    paddingVertical: 16,
+  },
   errorBox: {
     backgroundColor: "#fee2e2",
     padding: 12,

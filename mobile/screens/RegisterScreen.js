@@ -23,6 +23,32 @@ export default function RegisterScreen() {
     address: "",
   });
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+
+  const validate = (field, value) => {
+    const next = { ...errors };
+    if (field === "name") {
+      next.name = value.trim() ? "" : "Họ tên không được để trống";
+    } else if (field === "email") {
+      if (!value.trim()) next.email = "Email không được để trống";
+      else if (!value.includes("@")) next.email = "Email không hợp lệ";
+      else next.email = "";
+    } else if (field === "password") {
+      next.password = value.length >= 6 ? "" : "Mật khẩu tối thiểu 6 ký tự";
+    } else if (field === "phone") {
+      next.phone =
+        !value || value.replace(/\D/g, "").length >= 9
+          ? ""
+          : "Số điện thoại cần tối thiểu 9 số";
+    }
+    setErrors(next);
+  };
+
+  const handleChange = (key, value) => {
+    setForm({ ...form, [key]: value });
+    validate(key, value);
+  };
 
   const handleRegister = async () => {
     const payload = {
@@ -33,14 +59,19 @@ export default function RegisterScreen() {
       address: form.address.trim(),
     };
 
-    if (!payload.name || !payload.email || !payload.password)
-      return Alert.alert("Lỗi", "Tên, email, mật khẩu là bắt buộc");
-    if (!payload.email.includes("@"))
-      return Alert.alert("Lỗi", "Email không hợp lệ");
-    if (payload.password.length < 6)
-      return Alert.alert("Lỗi", "Mật khẩu tối thiểu 6 ký tự");
+    const newErrors = {};
+    if (!payload.name) newErrors.name = "Họ tên không được để trống";
+    if (!payload.email) newErrors.email = "Email không được để trống";
+    else if (!payload.email.includes("@")) newErrors.email = "Email không hợp lệ";
+    if (!payload.password) newErrors.password = "Mật khẩu không được để trống";
+    else if (payload.password.length < 6) newErrors.password = "Mật khẩu tối thiểu 6 ký tự";
     if (payload.phone && payload.phone.replace(/\D/g, "").length < 9)
-      return Alert.alert("Lỗi", "Số điện thoại cần tối thiểu 9 số");
+      newErrors.phone = "Số điện thoại cần tối thiểu 9 số";
+
+    if (Object.values(newErrors).some(Boolean)) {
+      setErrors(newErrors);
+      return;
+    }
 
     setLoading(true);
     try {
@@ -74,19 +105,31 @@ export default function RegisterScreen() {
         {fields.map((item) => (
           <View key={item.key} style={styles.fieldWrap}>
             <Text style={styles.fieldLabel}>{item.label}</Text>
-            <View style={styles.inputShell}>
-              <Ionicons name={item.icon} size={18} color="#9a3412" />
+            <View style={[styles.inputShell, errors[item.key] ? styles.inputShellError : null]}>
+              <Ionicons name={item.icon} size={18} color={errors[item.key] ? "#dc2626" : "#4f46e5"} />
               <TextInput
                 style={styles.input}
                 placeholder={item.label}
                 placeholderTextColor="#9ca3af"
-                secureTextEntry={item.secureTextEntry}
+                secureTextEntry={item.key === "password" ? !showPassword : false}
                 value={form[item.key]}
-                onChangeText={(v) => setForm({ ...form, [item.key]: v })}
+                onChangeText={(v) => handleChange(item.key, v)}
                 autoCapitalize={item.key === "email" ? "none" : "sentences"}
                 keyboardType={item.keyboardType}
               />
+              {item.key === "password" ? (
+                <Pressable onPress={() => setShowPassword((v) => !v)} hitSlop={8}>
+                  <Ionicons
+                    name={showPassword ? "eye-off-outline" : "eye-outline"}
+                    size={18}
+                    color="#94a3b8"
+                  />
+                </Pressable>
+              ) : null}
             </View>
+            {errors[item.key] ? (
+              <Text style={styles.fieldError}>{errors[item.key]}</Text>
+            ) : null}
           </View>
         ))}
         <Pressable
@@ -111,7 +154,7 @@ export default function RegisterScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f3f5f7",
+    backgroundColor: "#f1f5f9",
   },
   content: {
     padding: 16,
@@ -119,13 +162,15 @@ const styles = StyleSheet.create({
     paddingBottom: 28,
   },
   heroCard: {
-    backgroundColor: "#f8e7d7",
+    backgroundColor: "#eef2ff",
     borderRadius: 28,
     padding: 22,
     gap: 10,
+    borderWidth: 1,
+    borderColor: "#c7d2fe",
   },
   heroEyebrow: {
-    color: "#9a3412",
+    color: "#4f46e5",
     textTransform: "uppercase",
     letterSpacing: 0.8,
     fontSize: 11,
@@ -136,20 +181,22 @@ const styles = StyleSheet.create({
     borderRadius: 24,
     padding: 18,
     gap: 14,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
     shadowColor: "#000",
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.06,
     shadowRadius: 8,
     elevation: 3,
   },
   title: {
     fontSize: 30,
-    color: "#111827",
+    color: "#1e293b",
     fontFamily: FONTS.bold,
   },
-  subtitle: { color: "#6b7280", lineHeight: 20, fontFamily: FONTS.regular },
+  subtitle: { color: "#64748b", lineHeight: 20, fontFamily: FONTS.regular },
   fieldWrap: { gap: 8 },
   fieldLabel: {
-    color: "#111827",
+    color: "#374151",
     textTransform: "uppercase",
     letterSpacing: 0.7,
     fontSize: 12,
@@ -159,8 +206,8 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderWidth: 1.5,
+    borderColor: "#e2e8f0",
     borderRadius: 16,
     paddingHorizontal: 12,
     backgroundColor: "#fafafa",
@@ -168,11 +215,11 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     paddingVertical: 14,
-    color: "#111827",
+    color: "#1e293b",
     fontFamily: FONTS.regular,
   },
   primaryBtn: {
-    backgroundColor: "#111827",
+    backgroundColor: "#4f46e5",
     borderRadius: 16,
     padding: 14,
     alignItems: "center",
@@ -182,5 +229,15 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   primaryBtnText: { color: "#fff", fontWeight: "700", fontFamily: FONTS.bold },
+  inputShellError: {
+    borderColor: "#dc2626",
+    backgroundColor: "#fff5f5",
+  },
+  fieldError: {
+    color: "#dc2626",
+    fontSize: 12,
+    fontFamily: FONTS.regular,
+    marginTop: -4,
+  },
   disabled: { opacity: 0.65 },
 });

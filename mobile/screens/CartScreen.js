@@ -1,25 +1,51 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
+  Animated,
   FlatList,
   Image,
+  LayoutAnimation,
+  Platform,
   Pressable,
   StyleSheet,
   Text,
+  UIManager,
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useCart } from "../context/CartContext";
 import { FONTS } from "../constants/fonts";
+import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "../constants/shop";
+
+if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
+}
 
 export default function CartScreen({ navigation }) {
   const { cartItems, updateQty, removeItem } = useCart();
+  const revealAnim = useRef(new Animated.Value(0)).current;
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
   );
-  const shippingFee = subtotal >= 499000 ? 0 : 30000;
+  const shippingFee = subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
   const total = subtotal + shippingFee;
   const itemCount = cartItems.reduce((sum, item) => sum + item.quantity, 0);
+  const freeShippingRemaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
+  const freeShippingProgress = Math.min(1, subtotal / FREE_SHIPPING_THRESHOLD);
+
+  useEffect(() => {
+    Animated.timing(revealAnim, { toValue: 1, duration: 280, useNativeDriver: true }).start();
+  }, [revealAnim]);
+
+  const animatedRemove = (index) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    removeItem(index);
+  };
+
+  const animatedUpdateQty = (index, delta) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    updateQty(index, delta);
+  };
 
   const renderHeader = () => (
     <View style={styles.headerWrap}>
@@ -46,16 +72,45 @@ export default function CartScreen({ navigation }) {
           </View>
         </View>
       </View>
+
+      {/* Free shipping progress */}
+      <View style={styles.freeShipCard}>
+        {freeShippingRemaining === 0 ? (
+          <View style={styles.freeShipRow}>
+            <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
+            <Text style={styles.freeShipReached}>Bạn được miễn phí vận chuyển!</Text>
+          </View>
+        ) : (
+          <>
+            <View style={styles.freeShipRow}>
+              <Ionicons name="bicycle-outline" size={18} color="#4f46e5" />
+              <Text style={styles.freeShipText}>
+                Thêm{" "}
+                <Text style={styles.freeShipHighlight}>
+                  {freeShippingRemaining.toLocaleString()} đ
+                </Text>{" "}
+                để được miễn phí vận chuyển
+              </Text>
+            </View>
+            <View style={styles.progressTrack}>
+              <View
+                style={[styles.progressFill, { width: `${freeShippingProgress * 100}%` }]}
+              />
+            </View>
+          </>
+        )}
+      </View>
     </View>
   );
 
   return (
-    <View style={styles.container}>
+    <Animated.View style={[styles.container, { opacity: revealAnim, transform: [{ translateY: revealAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }] }]}>
       <FlatList
         data={cartItems}
         keyExtractor={(_, idx) => String(idx)}
         contentContainerStyle={styles.listContent}
         ListHeaderComponent={renderHeader}
+        removeClippedSubviews={false}
         ListEmptyComponent={
           <View style={styles.emptyCard}>
             <Ionicons name="bag-handle-outline" size={34} color="#9ca3af" />
@@ -95,7 +150,7 @@ export default function CartScreen({ navigation }) {
                 <View style={styles.qtyWrap}>
                   <Pressable
                     style={styles.smallBtn}
-                    onPress={() => updateQty(index, -1)}
+                    onPress={() => animatedUpdateQty(index, -1)}
                   >
                     <Text style={styles.qtyText}>-</Text>
                   </Pressable>
@@ -108,7 +163,7 @@ export default function CartScreen({ navigation }) {
                         ? styles.smallBtnDisabled
                         : null,
                     ]}
-                    onPress={() => updateQty(index, 1)}
+                    onPress={() => animatedUpdateQty(index, 1)}
                     disabled={
                       Number.isFinite(Number(item.availableStock)) &&
                       item.quantity >= Number(item.availableStock)
@@ -119,7 +174,7 @@ export default function CartScreen({ navigation }) {
                 </View>
                 <Pressable
                   style={[styles.smallBtn, styles.danger]}
-                  onPress={() => removeItem(index)}
+                  onPress={() => animatedRemove(index)}
                 >
                   <Text style={styles.removeText}>Xóa</Text>
                 </Pressable>
@@ -151,16 +206,16 @@ export default function CartScreen({ navigation }) {
           <Text style={styles.checkoutText}>Tiến hành thanh toán</Text>
         </Pressable>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 12, backgroundColor: "#f3f5f7" },
+  container: { flex: 1, padding: 12, backgroundColor: "#f1f5f9" },
   listContent: { paddingBottom: 12 },
-  headerWrap: { paddingBottom: 12 },
+  headerWrap: { paddingBottom: 12, gap: 10 },
   heroCard: {
-    backgroundColor: "#111827",
+    backgroundColor: "#1e1b4b",
     borderRadius: 24,
     padding: 18,
     gap: 12,
@@ -168,12 +223,14 @@ const styles = StyleSheet.create({
   heroBadge: {
     alignSelf: "flex-start",
     borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(129,140,248,0.2)",
     paddingHorizontal: 12,
     paddingVertical: 7,
+    borderWidth: 1,
+    borderColor: "rgba(129,140,248,0.3)",
   },
   heroBadgeText: {
-    color: "#fde68a",
+    color: "#a5b4fc",
     fontSize: 11,
     textTransform: "uppercase",
     letterSpacing: 0.8,
@@ -185,17 +242,42 @@ const styles = StyleSheet.create({
     lineHeight: 32,
     fontFamily: FONTS.bold,
   },
-  heroSubtitle: { color: "#d1d5db", lineHeight: 20, fontFamily: FONTS.regular },
+  heroSubtitle: { color: "#c7d2fe", lineHeight: 20, fontFamily: FONTS.regular },
   heroStatsRow: { flexDirection: "row", gap: 10 },
   heroStatCard: {
     flex: 1,
-    backgroundColor: "rgba(255,255,255,0.08)",
+    backgroundColor: "rgba(99,102,241,0.18)",
     borderRadius: 16,
     padding: 12,
     gap: 4,
+    borderWidth: 1,
+    borderColor: "rgba(129,140,248,0.2)",
   },
   heroStatValue: { color: "#fff", fontFamily: FONTS.bold },
-  heroStatLabel: { color: "#cbd5e1", fontSize: 12, fontFamily: FONTS.regular },
+  heroStatLabel: { color: "#a5b4fc", fontSize: 12, fontFamily: FONTS.regular },
+  freeShipCard: {
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 14,
+    gap: 10,
+    borderWidth: 1.5,
+    borderColor: "#e2e8f0",
+  },
+  freeShipRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  freeShipText: { flex: 1, color: "#475569", fontFamily: FONTS.regular, fontSize: 13 },
+  freeShipHighlight: { color: "#4f46e5", fontFamily: FONTS.bold },
+  freeShipReached: { color: "#16a34a", fontFamily: FONTS.bold, fontSize: 13 },
+  progressTrack: {
+    height: 6,
+    backgroundColor: "#e2e8f0",
+    borderRadius: 999,
+    overflow: "hidden",
+  },
+  progressFill: {
+    height: "100%",
+    backgroundColor: "#4f46e5",
+    borderRadius: 999,
+  },
   item: {
     backgroundColor: "#fff",
     borderRadius: 18,
@@ -203,11 +285,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     flexDirection: "row",
     gap: 12,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
     shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowRadius: 10,
-    shadowOffset: { width: 0, height: 3 },
-    elevation: 2,
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 1,
   },
   image: {
     width: 92,
@@ -241,7 +325,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   smallBtn: {
-    backgroundColor: "#f3f4f6",
+    backgroundColor: "#f1f5f9",
     borderRadius: 999,
     paddingVertical: 6,
     paddingHorizontal: 12,
@@ -258,38 +342,38 @@ const styles = StyleSheet.create({
   removeText: { color: "#b91c1c", fontFamily: FONTS.medium },
   footer: {
     borderTopWidth: 1,
-    borderTopColor: "#e5e7eb",
+    borderTopColor: "#e2e8f0",
     paddingTop: 14,
     gap: 8,
-    backgroundColor: "#f3f5f7",
+    backgroundColor: "#f1f5f9",
   },
   summaryRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  summaryLabel: { color: "#6b7280", fontFamily: FONTS.regular },
-  summaryValue: { color: "#111827", fontFamily: FONTS.medium },
+  summaryLabel: { color: "#64748b", fontFamily: FONTS.regular },
+  summaryValue: { color: "#0f172a", fontFamily: FONTS.medium },
   totalRow: {
     borderTopWidth: 1,
-    borderTopColor: "#e5e7eb",
+    borderTopColor: "#e2e8f0",
     paddingTop: 10,
     marginTop: 4,
   },
   total: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
+    color: "#0f172a",
     fontFamily: FONTS.bold,
   },
   checkoutBtn: {
-    backgroundColor: "#111827",
+    backgroundColor: "#4f46e5",
     borderRadius: 14,
     padding: 14,
     alignItems: "center",
   },
   checkoutText: { color: "#fff", fontWeight: "700", fontFamily: FONTS.bold },
-  disabled: { opacity: 0.6 },
+  disabled: { opacity: 0.5 },
   empty: {
     textAlign: "center",
     marginTop: 24,
@@ -312,7 +396,7 @@ const styles = StyleSheet.create({
   },
   browseBtn: {
     marginTop: 8,
-    backgroundColor: "#111827",
+    backgroundColor: "#4f46e5",
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 12,

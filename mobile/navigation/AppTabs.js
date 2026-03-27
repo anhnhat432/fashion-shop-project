@@ -1,5 +1,5 @@
-import React from "react";
-import { Text, View } from "react-native";
+import React, { useEffect, useRef } from "react";
+import { Animated, Text, View } from "react-native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { Ionicons } from "@expo/vector-icons";
 import HomeScreen from "../screens/HomeScreen";
@@ -12,13 +12,25 @@ const Tab = createBottomTabNavigator();
 
 function CartBadge() {
   const { cartCount } = useCart();
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const prevCount = useRef(cartCount);
+
+  useEffect(() => {
+    if (cartCount && cartCount !== prevCount.current) {
+      Animated.sequence([
+        Animated.spring(scaleAnim, { toValue: 1.35, useNativeDriver: true, friction: 3 }),
+        Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, friction: 5 }),
+      ]).start();
+    }
+    prevCount.current = cartCount;
+  }, [cartCount, scaleAnim]);
 
   if (!cartCount) {
     return null;
   }
 
   return (
-    <View
+    <Animated.View
       style={{
         position: "absolute",
         right: -8,
@@ -26,10 +38,11 @@ function CartBadge() {
         minWidth: 18,
         height: 18,
         borderRadius: 999,
-        backgroundColor: "#9a3412",
+        backgroundColor: "#4f46e5",
         alignItems: "center",
         justifyContent: "center",
         paddingHorizontal: 4,
+        transform: [{ scale: scaleAnim }],
       }}
     >
       <Text
@@ -37,7 +50,7 @@ function CartBadge() {
       >
         {cartCount > 9 ? "9+" : cartCount}
       </Text>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -47,14 +60,15 @@ export default function AppTabs() {
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarShowLabel: true,
-        tabBarActiveTintColor: "#111827",
-        tabBarInactiveTintColor: "#9ca3af",
+        tabBarActiveTintColor: "#4f46e5",
+        tabBarInactiveTintColor: "#94a3b8",
         tabBarStyle: {
           height: 70,
           paddingBottom: 10,
           paddingTop: 8,
-          backgroundColor: "#fffaf5",
-          borderTopColor: "#ead9ca",
+          backgroundColor: "#fff",
+          borderTopColor: "#e2e8f0",
+          borderTopWidth: 1,
         },
         tabBarLabelStyle: {
           fontFamily: FONTS.medium,

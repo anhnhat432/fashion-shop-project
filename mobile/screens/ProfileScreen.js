@@ -1,8 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  Animated,
   Pressable,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -16,6 +18,15 @@ export default function ProfileScreen({ navigation }) {
   const { user, updateProfile, logout } = useAuth();
   const [form, setForm] = useState({ name: "", phone: "", address: "" });
   const [saving, setSaving] = useState(false);
+  const revealAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.timing(revealAnim, {
+      toValue: 1,
+      duration: 280,
+      useNativeDriver: true,
+    }).start();
+  }, [revealAnim]);
 
   useEffect(() => {
     setForm({
@@ -64,7 +75,15 @@ export default function ProfileScreen({ navigation }) {
   };
 
   return (
-    <View style={styles.container}>
+    <Animated.View
+      style={[
+        styles.container,
+        {
+          opacity: revealAnim,
+          transform: [{ translateY: revealAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }],
+        },
+      ]}
+    >
       <View style={styles.heroCard}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{initials || "KH"}</Text>
@@ -78,7 +97,7 @@ export default function ProfileScreen({ navigation }) {
 
       <View style={styles.infoCard}>
         <View style={styles.infoStaticRow}>
-          <Ionicons name="mail-outline" size={18} color="#9a3412" />
+          <Ionicons name="mail-outline" size={18} color="#4f46e5" />
           <View style={styles.infoCopy}>
             <Text style={styles.infoLabel}>Email</Text>
             <Text style={styles.infoValue}>{user?.email || "-"}</Text>
@@ -88,7 +107,7 @@ export default function ProfileScreen({ navigation }) {
         <View style={styles.fieldWrap}>
           <Text style={styles.infoLabel}>Họ tên</Text>
           <View style={styles.inputShell}>
-            <Ionicons name="person-outline" size={18} color="#9a3412" />
+            <Ionicons name="person-outline" size={18} color="#4f46e5" />
             <TextInput
               style={styles.input}
               value={form.name}
@@ -104,7 +123,7 @@ export default function ProfileScreen({ navigation }) {
         <View style={styles.fieldWrap}>
           <Text style={styles.infoLabel}>Số điện thoại</Text>
           <View style={styles.inputShell}>
-            <Ionicons name="call-outline" size={18} color="#9a3412" />
+            <Ionicons name="call-outline" size={18} color="#4f46e5" />
             <TextInput
               style={styles.input}
               value={form.phone}
@@ -121,7 +140,7 @@ export default function ProfileScreen({ navigation }) {
         <View style={styles.fieldWrap}>
           <Text style={styles.infoLabel}>Địa chỉ</Text>
           <View style={[styles.inputShell, styles.inputShellMultiline]}>
-            <Ionicons name="location-outline" size={18} color="#9a3412" />
+            <Ionicons name="location-outline" size={18} color="#4f46e5" />
             <TextInput
               style={[styles.input, styles.multilineInput]}
               value={form.address}
@@ -148,7 +167,7 @@ export default function ProfileScreen({ navigation }) {
         </Pressable>
 
         <View style={styles.infoRow}>
-          <Ionicons name="call-outline" size={18} color="#9a3412" />
+          <Ionicons name="call-outline" size={18} color="#4f46e5" />
           <View style={styles.infoCopy}>
             <Text style={styles.infoLabel}>Trạng thái tài khoản</Text>
             <Text style={styles.infoValue}>
@@ -163,7 +182,7 @@ export default function ProfileScreen({ navigation }) {
         onPress={() => navigation.getParent()?.navigate("OrderHistory")}
       >
         <View style={styles.actionIconWrap}>
-          <Ionicons name="receipt-outline" size={20} color="#111827" />
+          <Ionicons name="receipt-outline" size={20} color="#4f46e5" />
         </View>
         <View style={styles.actionCopy}>
           <Text style={styles.actionTitle}>Lịch sử đơn hàng</Text>
@@ -178,7 +197,7 @@ export default function ProfileScreen({ navigation }) {
         onPress={() => navigation.getParent()?.navigate("Wishlist")}
       >
         <View style={styles.actionIconWrap}>
-          <Ionicons name="heart-outline" size={20} color="#111827" />
+          <Ionicons name="heart-outline" size={20} color="#4f46e5" />
         </View>
         <View style={styles.actionCopy}>
           <Text style={styles.actionTitle}>Wishlist</Text>
@@ -188,17 +207,32 @@ export default function ProfileScreen({ navigation }) {
         </View>
       </Pressable>
 
+      <Pressable
+        style={styles.actionCard}
+        onPress={() => navigation.getParent()?.navigate("ChangePassword")}
+      >
+        <View style={styles.actionIconWrap}>
+          <Ionicons name="lock-closed-outline" size={20} color="#4f46e5" />
+        </View>
+        <View style={styles.actionCopy}>
+          <Text style={styles.actionTitle}>Đổi mật khẩu</Text>
+          <Text style={styles.actionSubtitle}>
+            Cập nhật mật khẩu để bảo vệ tài khoản
+          </Text>
+        </View>
+      </Pressable>
+
       <Pressable style={styles.btnDanger} onPress={logout}>
         <Text style={styles.btnDangerText}>Đăng xuất</Text>
       </Pressable>
-    </View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, gap: 10, backgroundColor: "#f3f5f7" },
+  container: { flex: 1, padding: 16, gap: 10, backgroundColor: "#f1f5f9" },
   heroCard: {
-    backgroundColor: "#111827",
+    backgroundColor: "#1e1b4b",
     borderRadius: 24,
     padding: 18,
     flexDirection: "row",
@@ -209,14 +243,14 @@ const styles = StyleSheet.create({
     width: 66,
     height: 66,
     borderRadius: 999,
-    backgroundColor: "rgba(255,255,255,0.12)",
+    backgroundColor: "rgba(165,180,252,0.2)",
     alignItems: "center",
     justifyContent: "center",
   },
   avatarText: { color: "#fff", fontSize: 22, fontFamily: FONTS.bold },
   heroCopy: { flex: 1, gap: 2 },
   kicker: {
-    color: "#fde68a",
+    color: "#a5b4fc",
     textTransform: "uppercase",
     letterSpacing: 0.8,
     fontSize: 11,
@@ -227,33 +261,33 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontFamily: FONTS.bold,
   },
-  heroMeta: { color: "#d1d5db", fontFamily: FONTS.regular },
+  heroMeta: { color: "#c7d2fe", fontFamily: FONTS.regular },
   infoCard: {
-    backgroundColor: "#fffaf5",
+    backgroundColor: "#fff",
     borderRadius: 18,
     padding: 14,
     gap: 14,
     borderWidth: 1,
-    borderColor: "#eeded0",
+    borderColor: "#e2e8f0",
   },
   infoStaticRow: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
   infoRow: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
   infoCopy: { flex: 1, gap: 2 },
   infoLabel: {
-    color: "#9a3412",
+    color: "#4f46e5",
     fontSize: 12,
     textTransform: "uppercase",
     letterSpacing: 0.6,
     fontFamily: FONTS.medium,
   },
-  infoValue: { color: "#111827", fontFamily: FONTS.medium },
+  infoValue: { color: "#1e293b", fontFamily: FONTS.medium },
   fieldWrap: { gap: 8 },
   inputShell: {
     flexDirection: "row",
     alignItems: "center",
     gap: 10,
-    borderWidth: 1,
-    borderColor: "#ead9ca",
+    borderWidth: 1.5,
+    borderColor: "#e2e8f0",
     borderRadius: 16,
     paddingHorizontal: 12,
     backgroundColor: "#fff",
@@ -262,7 +296,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     paddingVertical: 14,
-    color: "#111827",
+    color: "#1e293b",
     fontFamily: FONTS.regular,
   },
   multilineInput: { minHeight: 72, textAlignVertical: "top" },
@@ -273,20 +307,22 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 12,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
   },
   actionIconWrap: {
     width: 42,
     height: 42,
     borderRadius: 14,
-    backgroundColor: "#f8e7d7",
+    backgroundColor: "#eef2ff",
     alignItems: "center",
     justifyContent: "center",
   },
   actionCopy: { flex: 1 },
-  actionTitle: { color: "#111827", fontFamily: FONTS.bold },
+  actionTitle: { color: "#1e293b", fontFamily: FONTS.bold },
   actionSubtitle: { color: "#6b7280", marginTop: 2, fontFamily: FONTS.regular },
   btnPrimary: {
-    backgroundColor: "#111827",
+    backgroundColor: "#4f46e5",
     borderRadius: 14,
     padding: 14,
     alignItems: "center",

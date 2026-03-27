@@ -21,6 +21,10 @@ export function WishlistProvider({ children }) {
     try {
       const res = await api.get("/auth/me/wishlist");
       setWishlistItems(res.data.data || []);
+    } catch (error) {
+      if (error.response?.status === 401 || error.response?.status === 403) {
+        setWishlistItems([]);
+      }
     } finally {
       setLoading(false);
     }

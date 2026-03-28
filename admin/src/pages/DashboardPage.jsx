@@ -49,9 +49,12 @@ export default function DashboardPage() {
   const summary = useMemo(() => {
     const { products, categories, orders } = dashboard;
     const activeOrders = orders.filter((item) => item.status !== 'CANCELLED');
+    const revenueOrders = activeOrders.filter(
+      (item) => item.paymentMethod !== 'BANK_TRANSFER' || item.paymentStatus === 'PAID',
+    );
     const deliveredOrders = orders.filter((item) => item.status === 'DELIVERED');
-    const revenue = activeOrders.reduce((sum, item) => sum + Number(item.totalAmount || 0), 0);
-    const averageOrderValue = activeOrders.length ? revenue / activeOrders.length : 0;
+    const revenue = revenueOrders.reduce((sum, item) => sum + Number(item.totalAmount || 0), 0);
+    const averageOrderValue = revenueOrders.length ? revenue / revenueOrders.length : 0;
     const lowStockProducts = products.filter((item) => Number(item.stock || 0) > 0 && Number(item.stock || 0) <= 5);
     const soldOutProducts = products.filter((item) => Number(item.stock || 0) === 0);
     const totalStock = products.reduce((sum, item) => sum + Number(item.stock || 0), 0);
@@ -76,7 +79,10 @@ export default function DashboardPage() {
 
     const productSalesMap = {};
     orders.forEach((order) => {
-      if (order.status !== 'CANCELLED') {
+      if (
+        order.status !== 'CANCELLED' &&
+        (order.paymentMethod !== 'BANK_TRANSFER' || order.paymentStatus === 'PAID')
+      ) {
         (order.items || []).forEach((item) => {
           const pid = String(item.productId?._id || item.productId || '');
           productSalesMap[pid] = (productSalesMap[pid] || 0) + Number(item.quantity || 0);

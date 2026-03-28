@@ -5,6 +5,7 @@ const { getVoucherQuote } = require("../utils/voucherUtils");
 
 const FREE_SHIPPING_THRESHOLD = 499000;
 const SHIPPING_FEE = 30000;
+const BANK_TRANSFER_CONFIRM_WINDOW_MINUTES = 10;
 
 const ALLOWED_PAYMENT_METHODS = ["COD", "BANK_TRANSFER"];
 const ALLOWED_PAYMENT_STATUS = ["PENDING", "PAID"];
@@ -22,6 +23,23 @@ const ORDER_STATUS_TRANSITIONS = {
   SHIPPING: ["DELIVERED", "CANCELLED"],
   DELIVERED: [],
   CANCELLED: [],
+};
+
+const buildPaymentDeadline = () =>
+  new Date(
+    Date.now() + BANK_TRANSFER_CONFIRM_WINDOW_MINUTES * 60 * 1000,
+  );
+
+const buildPaymentNote = ({ paymentMethod, paymentStatus }) => {
+  if (paymentStatus === "PAID") {
+    return paymentMethod === "BANK_TRANSFER"
+      ? "Admin đã xác nhận chuyển khoản mô phỏng"
+      : "Admin đã xác nhận đơn đã thanh toán";
+  }
+
+  return paymentMethod === "BANK_TRANSFER"
+    ? "Đơn đang chờ shop xác nhận chuyển khoản mô phỏng"
+    : "Thanh toán khi nhận hàng";
 };
 
 const buildVariantKey = (productId, size, color) =>
@@ -261,20 +279,22 @@ const createOrder = async (req, res, next) => {
     const totalAmount = itemsSubtotal - discountAmount + shippingFee;
 
     const normalizedPaymentNote =
-      typeof paymentNote === "string" && paymentNote.trim()
-        ? paymentNote.trim()
-        : selectedPaymentMethod === "BANK_TRANSFER"
-          ? "Đã xác nhận chuyển khoản mô phỏng"
+      selectedPaymentMethod === "BANK_TRANSFER"
+        ? "Khách đã gửi yêu cầu xác nhận chuyển khoản mô phỏng"
+        : typeof paymentNote === "string" && paymentNote.trim()
+          ? paymentNote.trim()
           : "Thanh toán khi nhận hàng";
 
     const normalizedTransferReference =
-      selectedPaymentMethod === "BANK_TRANSFER" &&
-      typeof transferReference === "string"
-        ? transferReference.trim().slice(0, 40)
+      selectedPaymentMethod === "BANK_TRANSFER"
+        ? typeof transferReference === "string" && transferReference.trim()
+          ? transferReference.trim().slice(0, 40)
+          : `FSHOP-${Date.now().toString().slice(-8)}`
         : "";
 
-    const paymentStatus =
-      selectedPaymentMethod === "BANK_TRANSFER" ? "PAID" : "PENDING";
+    const paymentStatus = "PENDING";
+    const paymentDeadlineAt =
+      selectedPaymentMethod === "BANK_TRANSFER" ? buildPaymentDeadline() : null;
 
     const stockUpdates = buildStockAdjustmentOperations(
       normalizedItems,
@@ -305,6 +325,8 @@ const createOrder = async (req, res, next) => {
         paymentStatus,
         paymentNote: normalizedPaymentNote,
         transferReference: normalizedTransferReference,
+        paymentDeadlineAt,
+        paidAt: null,
       });
     } catch (error) {
       await Product.bulkWrite(
@@ -360,6 +382,13 @@ const cancelMyOrder = async (req, res, next) => {
       return res.status(400).json({
         success: false,
         message: "Only pending orders can be cancelled by the customer",
+      });
+    }
+
+    if (order.paymentStatus === "PAID") {
+      return res.status(400).json({
+        success: false,
+        message: "Paid orders cannot be cancelled by the customer",
       });
     }
 
@@ -421,6 +450,17 @@ const updateOrderStatus = async (req, res, next) => {
       });
     }
 
+    if (
+      status === "CONFIRMED" &&
+      order.paymentMethod === "BANK_TRANSFER" &&
+      order.paymentStatus !== "PAID"
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Bank transfer orders must be marked as paid before confirming",
+      });
+    }
+
     if (status === "CANCELLED") {
       const productIds = [
         ...new Set((order.items || []).map((item) => String(item.productId))),
@@ -460,28 +500,37 @@ const updatePaymentStatus = async (req, res, next) => {
         .json({ success: false, message: "Invalid payment status" });
     }
 
-    const update = {
-      paymentStatus,
-      paymentNote:
-        paymentStatus === "PAID"
-          ? "Admin đã xác nhận thanh toán"
-          : "Đơn hàng đang chờ thanh toán",
-    };
-
-    if (paymentStatus === "PENDING") {
-      update.transferReference = "";
-    }
-
-    const order = await Order.findByIdAndUpdate(req.params.id, update, {
-      new: true,
-      runValidators: true,
-    });
-
+    const order = await Order.findById(req.params.id);
     if (!order) {
       return res
         .status(404)
         .json({ success: false, message: "Order not found" });
     }
+
+    if (order.status === "CANCELLED" && paymentStatus === "PAID") {
+      return res.status(400).json({
+        success: false,
+        message: "Cancelled orders cannot be marked as paid",
+      });
+    }
+
+    order.paymentStatus = paymentStatus;
+    order.paymentNote = buildPaymentNote({
+      paymentMethod: order.paymentMethod,
+      paymentStatus,
+    });
+    order.paidAt = paymentStatus === "PAID" ? new Date() : null;
+
+    if (order.paymentMethod === "BANK_TRANSFER") {
+      order.paymentDeadlineAt =
+        paymentStatus === "PAID"
+          ? order.paymentDeadlineAt
+          : buildPaymentDeadline();
+    } else {
+      order.paymentDeadlineAt = null;
+    }
+
+    await order.save();
 
     res.json({ success: true, message: "Payment status updated", data: order });
   } catch (error) {

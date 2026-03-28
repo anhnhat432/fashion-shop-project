@@ -43,6 +43,8 @@ const orderSchema = new mongoose.Schema(
     },
     paymentNote: { type: String, default: "" },
     transferReference: { type: String, default: "" },
+    paymentDeadlineAt: { type: Date, default: null },
+    paidAt: { type: Date, default: null },
     status: {
       type: String,
       enum: ["PENDING", "CONFIRMED", "SHIPPING", "DELIVERED", "CANCELLED"],

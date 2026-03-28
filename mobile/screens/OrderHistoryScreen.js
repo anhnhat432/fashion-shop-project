@@ -1,6 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Animated,
   FlatList,
@@ -15,22 +14,9 @@ import api from "../services/api";
 import SkeletonBlock from "../components/SkeletonBlock";
 import { FONTS } from "../constants/fonts";
 
-const paymentStatusMap = {
-  PAID: "Đã thanh toán",
-  PENDING: "Chưa thanh toán",
-};
-
 const paymentMethodMap = {
   COD: "COD",
   BANK_TRANSFER: "Chuyển khoản",
-};
-
-const orderStatusMap = {
-  PENDING: "Chờ xác nhận",
-  CONFIRMED: "Đã xác nhận",
-  SHIPPING: "Đang giao",
-  DELIVERED: "Đã giao",
-  CANCELLED: "Đã hủy",
 };
 
 const STATUS_FILTERS = [
@@ -42,6 +28,78 @@ const STATUS_FILTERS = [
   { key: "CANCELLED", label: "Đã hủy" },
 ];
 
+const formatCurrency = (value) =>
+  `${Number(value || 0).toLocaleString("vi-VN")} đ`;
+
+const formatDateTime = (value) => {
+  if (!value) {
+    return "";
+  }
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return "";
+  }
+
+  return date.toLocaleString("vi-VN", {
+    hour: "2-digit",
+    minute: "2-digit",
+    day: "2-digit",
+    month: "2-digit",
+  });
+};
+
+const getPaymentBadgeLabel = (order) => {
+  if (order.paymentStatus === "PAID") {
+    return "Đã thanh toán";
+  }
+
+  return order.paymentMethod === "BANK_TRANSFER"
+    ? "Chờ xác nhận CK"
+    : "Thu khi nhận hàng";
+};
+
+const getPaymentSummary = (order) => {
+  if (order.paymentStatus === "PAID") {
+    return order.paidAt
+      ? `Thanh toán đã được xác nhận lúc ${formatDateTime(order.paidAt)}.`
+      : "Thanh toán đã được xác nhận.";
+  }
+
+  if (order.paymentMethod === "BANK_TRANSFER") {
+    return order.paymentDeadlineAt
+      ? `Shop đang đối chiếu chuyển khoản mô phỏng. Dự kiến xác nhận trước ${formatDateTime(order.paymentDeadlineAt)}.`
+      : "Shop đang đối chiếu chuyển khoản mô phỏng của bạn.";
+  }
+
+  return "Bạn sẽ thanh toán khi nhận hàng.";
+};
+
+const getPaymentMetaLines = (order) => {
+  const lines = [`Phương thức: ${paymentMethodMap[order.paymentMethod] || order.paymentMethod}`];
+
+  if (order.transferReference) {
+    lines.push(`Mã giao dịch: ${order.transferReference}`);
+  }
+
+  if (order.paymentDeadlineAt && order.paymentStatus !== "PAID") {
+    lines.push(`Hạn xác nhận: ${formatDateTime(order.paymentDeadlineAt)}`);
+  }
+
+  if (order.paidAt) {
+    lines.push(`Xác nhận lúc: ${formatDateTime(order.paidAt)}`);
+  }
+
+  if (order.paymentNote) {
+    lines.push(order.paymentNote);
+  }
+
+  return lines;
+};
+
+const canCancelOrder = (order) =>
+  order.status === "PENDING" && order.paymentStatus !== "PAID";
+
 export default function OrderHistoryScreen() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -52,8 +110,12 @@ export default function OrderHistoryScreen() {
   const revealAnim = useRef(new Animated.Value(0)).current;
 
   const fetchOrders = async (showRefresh = false) => {
-    if (showRefresh) setRefreshing(true);
-    else setLoading(true);
+    if (showRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+
     setError("");
     try {
       const res = await api.get("/orders/my-orders");
@@ -84,9 +146,7 @@ export default function OrderHistoryScreen() {
     }
   }, [loading, revealAnim]);
 
-  const paidCount = orders.filter(
-    (item) => item.paymentStatus === "PAID",
-  ).length;
+  const paidCount = orders.filter((item) => item.paymentStatus === "PAID").length;
   const pendingCount = orders.filter(
     (item) => item.paymentStatus !== "PAID",
   ).length;
@@ -133,8 +193,8 @@ export default function OrderHistoryScreen() {
           <Ionicons name="receipt-outline" size={24} color="#a5b4fc" />
         </View>
         <Text style={styles.heroSubtitle}>
-          Kiểm tra trạng thái giao hàng, thanh toán và mã chuyển khoản mô phỏng
-          trong một màn hình.
+          Kiểm tra trạng thái giao hàng, thanh toán, mã giao dịch và thời điểm
+          xác nhận ngay trong một màn hình.
         </Text>
         <View style={styles.heroStats}>
           <View style={styles.heroStatCard}>
@@ -147,7 +207,7 @@ export default function OrderHistoryScreen() {
           </View>
           <View style={styles.heroStatCard}>
             <Text style={styles.heroStatValue}>{pendingCount}</Text>
-            <Text style={styles.heroStatLabel}>Chờ thanh toán</Text>
+            <Text style={styles.heroStatLabel}>Chưa thanh toán</Text>
           </View>
         </View>
       </View>
@@ -242,167 +302,209 @@ export default function OrderHistoryScreen() {
             </Text>
           </View>
         }
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <View style={styles.cardHead}>
-              <View style={styles.orderCodeWrap}>
-                <Text style={styles.codeLabel}>Mã đơn</Text>
-                <Text style={styles.code}>
-                  #{item._id.slice(-8).toUpperCase()}
-                </Text>
-              </View>
-              <View
-                style={[
-                  styles.statusBadge,
-                  item.paymentStatus === "PAID"
-                    ? styles.paidBadge
-                    : styles.pendingBadge,
-                ]}
-              >
-                <Text
+        renderItem={({ item }) => {
+          const paymentBadgeLabel = getPaymentBadgeLabel(item);
+          const paymentMetaLines = getPaymentMetaLines(item);
+          const showPaidTone = item.paymentStatus === "PAID";
+          const showCodTone =
+            item.paymentStatus !== "PAID" && item.paymentMethod === "COD";
+
+          return (
+            <View style={styles.card}>
+              <View style={styles.cardHead}>
+                <View style={styles.orderCodeWrap}>
+                  <Text style={styles.codeLabel}>Mã đơn</Text>
+                  <Text style={styles.code}>
+                    #{item._id.slice(-8).toUpperCase()}
+                  </Text>
+                </View>
+                <View
                   style={[
-                    styles.statusBadgeText,
-                    item.paymentStatus === "PAID"
-                      ? styles.paidBadgeText
-                      : styles.pendingBadgeText,
+                    styles.statusBadge,
+                    showPaidTone
+                      ? styles.paidBadge
+                      : showCodTone
+                        ? styles.codBadge
+                        : styles.pendingBadge,
                   ]}
                 >
-                  {paymentStatusMap[item.paymentStatus] || item.paymentStatus}
-                </Text>
+                  <Text
+                    style={[
+                      styles.statusBadgeText,
+                      showPaidTone
+                        ? styles.paidBadgeText
+                        : showCodTone
+                          ? styles.codBadgeText
+                          : styles.pendingBadgeText,
+                    ]}
+                  >
+                    {paymentBadgeLabel}
+                  </Text>
+                </View>
               </View>
-            </View>
 
-            {item.status === "CANCELLED" ? (
-              <View style={styles.cancelledRow}>
-                <Ionicons name="close-circle" size={16} color="#ef4444" />
-                <Text style={styles.cancelledText}>Đơn hàng đã bị hủy</Text>
-              </View>
-            ) : (
-              <View style={styles.stepperWrap}>
-                {[
-                  {
-                    key: "PENDING",
-                    label: "Chờ xác\nnhận",
-                    icon: "time-outline",
-                  },
-                  {
-                    key: "CONFIRMED",
-                    label: "Đã xác\nnhận",
-                    icon: "checkmark-circle-outline",
-                  },
-                  {
-                    key: "SHIPPING",
-                    label: "Đang\ngiao",
-                    icon: "bicycle-outline",
-                  },
-                  {
-                    key: "DELIVERED",
-                    label: "Đã\ngiao",
-                    icon: "bag-check-outline",
-                  },
-                ].map((step, idx) => {
-                  const STEP_ORDER = [
-                    "PENDING",
-                    "CONFIRMED",
-                    "SHIPPING",
-                    "DELIVERED",
-                  ];
-                  const currentIdx = STEP_ORDER.indexOf(item.status);
-                  const done = currentIdx >= idx;
-                  return (
-                    <React.Fragment key={step.key}>
-                      {idx > 0 && (
-                        <View
-                          style={[styles.stepLine, done && styles.stepLineDone]}
-                        />
-                      )}
-                      <View style={styles.stepNode}>
-                        <View
-                          style={[
-                            styles.stepCircle,
-                            done && styles.stepCircleDone,
-                          ]}
-                        >
-                          <Ionicons
-                            name={step.icon}
-                            size={14}
-                            color={done ? "#fff" : "#94a3b8"}
+              {item.status === "CANCELLED" ? (
+                <View style={styles.cancelledRow}>
+                  <Ionicons name="close-circle" size={16} color="#ef4444" />
+                  <Text style={styles.cancelledText}>Đơn hàng đã bị hủy</Text>
+                </View>
+              ) : (
+                <View style={styles.stepperWrap}>
+                  {[
+                    {
+                      key: "PENDING",
+                      label: "Chờ xác\nnhận",
+                      icon: "time-outline",
+                    },
+                    {
+                      key: "CONFIRMED",
+                      label: "Đã xác\nnhận",
+                      icon: "checkmark-circle-outline",
+                    },
+                    {
+                      key: "SHIPPING",
+                      label: "Đang\ngiao",
+                      icon: "bicycle-outline",
+                    },
+                    {
+                      key: "DELIVERED",
+                      label: "Đã\ngiao",
+                      icon: "bag-check-outline",
+                    },
+                  ].map((step, idx) => {
+                    const STEP_ORDER = [
+                      "PENDING",
+                      "CONFIRMED",
+                      "SHIPPING",
+                      "DELIVERED",
+                    ];
+                    const currentIdx = STEP_ORDER.indexOf(item.status);
+                    const done = currentIdx >= idx;
+                    return (
+                      <React.Fragment key={step.key}>
+                        {idx > 0 && (
+                          <View
+                            style={[
+                              styles.stepLine,
+                              done && styles.stepLineDone,
+                            ]}
                           />
+                        )}
+                        <View style={styles.stepNode}>
+                          <View
+                            style={[
+                              styles.stepCircle,
+                              done && styles.stepCircleDone,
+                            ]}
+                          >
+                            <Ionicons
+                              name={step.icon}
+                              size={14}
+                              color={done ? "#fff" : "#94a3b8"}
+                            />
+                          </View>
+                          <Text
+                            style={[
+                              styles.stepLabel,
+                              done && styles.stepLabelDone,
+                            ]}
+                          >
+                            {step.label}
+                          </Text>
                         </View>
-                        <Text
-                          style={[
-                            styles.stepLabel,
-                            done && styles.stepLabelDone,
-                          ]}
-                        >
-                          {step.label}
+                      </React.Fragment>
+                    );
+                  })}
+                </View>
+              )}
+
+              <View style={styles.paymentPanel}>
+                <Text style={styles.paymentPanelTitle}>Thanh toán</Text>
+                <Text style={styles.paymentPanelCopy}>
+                  {getPaymentSummary(item)}
+                </Text>
+                <View style={styles.paymentMetaStack}>
+                  {paymentMetaLines.map((line) => (
+                    <Text key={line} style={styles.paymentMetaLine}>
+                      {line}
+                    </Text>
+                  ))}
+                </View>
+              </View>
+
+              {item.items?.length ? (
+                <View style={styles.itemsWrap}>
+                  {item.items.map((orderItem, index) => (
+                    <View
+                      key={`${orderItem.productId}-${index}`}
+                      style={styles.orderItemRow}
+                    >
+                      <View style={styles.orderItemContent}>
+                        <Text style={styles.orderItemName} numberOfLines={1}>
+                          {orderItem.name}
+                        </Text>
+                        <Text style={styles.orderItemMeta}>
+                          {orderItem.size || "Một cỡ"} •{" "}
+                          {orderItem.color || "Trung tính"} • x
+                          {orderItem.quantity}
                         </Text>
                       </View>
-                    </React.Fragment>
-                  );
-                })}
-              </View>
-            )}
-            <View style={styles.metaRow}>
-              <Text style={styles.meta}>
-                Phương thức:{" "}
-                {paymentMethodMap[item.paymentMethod] || item.paymentMethod}
-              </Text>
-              {item.transferReference ? (
-                <Text style={styles.meta}>Mã CK: {item.transferReference}</Text>
-              ) : null}
-            </View>
-
-            {item.items?.length ? (
-              <View style={styles.itemsWrap}>
-                {item.items.map((orderItem, index) => (
-                  <View
-                    key={`${orderItem.productId}-${index}`}
-                    style={styles.orderItemRow}
-                  >
-                    <View style={styles.orderItemContent}>
-                      <Text style={styles.orderItemName} numberOfLines={1}>
-                        {orderItem.name}
-                      </Text>
-                      <Text style={styles.orderItemMeta}>
-                        {orderItem.size || "Một cỡ"} •{" "}
-                        {orderItem.color || "Trung tính"} • x
-                        {orderItem.quantity}
+                      <Text style={styles.orderItemPrice}>
+                        {formatCurrency(orderItem.price)}
                       </Text>
                     </View>
-                    <Text style={styles.orderItemPrice}>
-                      {Number(orderItem.price || 0).toLocaleString()} đ
-                    </Text>
-                  </View>
-                ))}
+                  ))}
+                </View>
+              ) : null}
+
+              <View style={styles.cardFooter}>
+                <View style={styles.footerBlock}>
+                  <Text style={styles.totalLabel}>Đặt lúc</Text>
+                  <Text style={styles.footerMeta}>
+                    {formatDateTime(item.createdAt)}
+                  </Text>
+                </View>
+                <View style={styles.footerBlock}>
+                  <Text style={styles.totalLabel}>Tổng thanh toán</Text>
+                  <Text style={styles.total}>
+                    {formatCurrency(item.totalAmount)}
+                  </Text>
+                </View>
               </View>
-            ) : null}
 
-            <View style={styles.cardFooter}>
-              <Text style={styles.totalLabel}>Tổng thanh toán</Text>
-              <Text style={styles.total}>
-                {Number(item.totalAmount || 0).toLocaleString()} đ
-              </Text>
+              {canCancelOrder(item) ? (
+                <Pressable
+                  style={[
+                    styles.cancelBtn,
+                    cancellingId === item._id && styles.cancelBtnDisabled,
+                  ]}
+                  onPress={() => cancelOrder(item._id)}
+                  disabled={cancellingId === item._id}
+                >
+                  <Text style={styles.cancelBtnText}>
+                    {cancellingId === item._id
+                      ? "Đang hủy đơn..."
+                      : "Hủy đơn hàng"}
+                  </Text>
+                </Pressable>
+              ) : null}
+
+              {item.status === "PENDING" && item.paymentStatus === "PAID" ? (
+                <View style={styles.lockedNotice}>
+                  <Ionicons
+                    name="shield-checkmark-outline"
+                    size={16}
+                    color="#166534"
+                  />
+                  <Text style={styles.lockedNoticeText}>
+                    Đơn đã được ghi nhận thanh toán. Nếu cần thay đổi, vui lòng
+                    liên hệ shop để được hỗ trợ.
+                  </Text>
+                </View>
+              ) : null}
             </View>
-
-            {item.status === "PENDING" ? (
-              <Pressable
-                style={[
-                  styles.cancelBtn,
-                  cancellingId === item._id && styles.cancelBtnDisabled,
-                ]}
-                onPress={() => cancelOrder(item._id)}
-                disabled={cancellingId === item._id}
-              >
-                <Text style={styles.cancelBtnText}>
-                  {cancellingId === item._id
-                    ? "Đang hủy đơn..."
-                    : "Hủy đơn hàng"}
-                </Text>
-              </Pressable>
-            ) : null}
-          </View>
-        )}
+          );
+        }}
       />
     </Animated.View>
   );
@@ -427,7 +529,7 @@ const styles = StyleSheet.create({
   loadingSubtitle: { width: "100%", height: 18, borderRadius: 10 },
   loadingStatRow: { flexDirection: "row", gap: 10 },
   loadingStatCard: { flex: 1, height: 74, borderRadius: 16 },
-  loadingCard: { width: "100%", height: 150, borderRadius: 18 },
+  loadingCard: { width: "100%", height: 180, borderRadius: 18 },
   center: {
     flex: 1,
     alignItems: "center",
@@ -440,7 +542,6 @@ const styles = StyleSheet.create({
   filterScroll: {
     flexDirection: "row",
     gap: 8,
-    paddingHorizontal: 0,
     paddingVertical: 10,
   },
   filterChip: {
@@ -509,9 +610,11 @@ const styles = StyleSheet.create({
   statusBadge: { borderRadius: 999, paddingHorizontal: 12, paddingVertical: 7 },
   paidBadge: { backgroundColor: "#dcfce7" },
   pendingBadge: { backgroundColor: "#fef3c7" },
+  codBadge: { backgroundColor: "#ecfeff" },
   statusBadgeText: { fontFamily: FONTS.bold, fontSize: 12 },
   paidBadgeText: { color: "#166534" },
   pendingBadgeText: { color: "#92400e" },
+  codBadgeText: { color: "#0f766e" },
   stepperWrap: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -546,8 +649,31 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   cancelledText: { color: "#ef4444", fontFamily: FONTS.medium, fontSize: 13 },
-  metaRow: { gap: 2 },
-  meta: { color: "#6b7280", fontFamily: FONTS.regular },
+  paymentPanel: {
+    backgroundColor: "#f8fafc",
+    borderRadius: 16,
+    padding: 12,
+    gap: 6,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+  },
+  paymentPanelTitle: {
+    color: "#0f172a",
+    fontFamily: FONTS.bold,
+    fontSize: 14,
+  },
+  paymentPanelCopy: {
+    color: "#475569",
+    fontFamily: FONTS.regular,
+    lineHeight: 19,
+  },
+  paymentMetaStack: { gap: 3 },
+  paymentMetaLine: {
+    color: "#334155",
+    fontFamily: FONTS.medium,
+    fontSize: 12.5,
+    lineHeight: 18,
+  },
   itemsWrap: {
     borderTopWidth: 1,
     borderTopColor: "#f3f4f6",
@@ -570,10 +696,17 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
+    gap: 12,
   },
+  footerBlock: { flex: 1, gap: 2 },
+  footerMeta: { color: "#475569", fontFamily: FONTS.medium },
   totalLabel: { color: "#6b7280", fontFamily: FONTS.regular },
-  total: { fontWeight: "700", color: "#1e293b", fontFamily: FONTS.bold },
+  total: {
+    color: "#1e293b",
+    fontFamily: FONTS.bold,
+    fontSize: 16,
+    textAlign: "right",
+  },
   cancelBtn: {
     backgroundColor: "#fee2e2",
     borderRadius: 12,
@@ -582,6 +715,22 @@ const styles = StyleSheet.create({
   },
   cancelBtnDisabled: { opacity: 0.6 },
   cancelBtnText: { color: "#b91c1c", fontFamily: FONTS.bold },
+  lockedNotice: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+    backgroundColor: "#ecfdf5",
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: "#bbf7d0",
+  },
+  lockedNoticeText: {
+    flex: 1,
+    color: "#166534",
+    fontFamily: FONTS.medium,
+    lineHeight: 19,
+  },
   empty: {
     textAlign: "center",
     color: "#6b7280",
@@ -596,7 +745,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   emptyTitle: { color: "#1e293b", fontSize: 18, fontFamily: FONTS.bold },
-  muted: { color: "#6b7280", fontFamily: FONTS.regular },
   error: { color: "#b91c1c", textAlign: "center", fontFamily: FONTS.regular },
   retryBtn: {
     backgroundColor: "#1e1b4b",

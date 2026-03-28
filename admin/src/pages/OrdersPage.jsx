@@ -9,7 +9,7 @@ const allowedStatusTransitions = {
   CONFIRMED: ['CONFIRMED', 'SHIPPING', 'CANCELLED'],
   SHIPPING: ['SHIPPING', 'DELIVERED', 'CANCELLED'],
   DELIVERED: ['DELIVERED'],
-  CANCELLED: ['CANCELLED']
+  CANCELLED: ['CANCELLED'],
 };
 
 const statusClassMap = {
@@ -17,7 +17,7 @@ const statusClassMap = {
   CONFIRMED: 'status-confirmed',
   SHIPPING: 'status-shipping',
   DELIVERED: 'status-delivered',
-  CANCELLED: 'status-cancelled'
+  CANCELLED: 'status-cancelled',
 };
 
 const statusLabelMap = {
@@ -31,13 +31,73 @@ const statusLabelMap = {
 
 const paymentStatusLabelMap = {
   ALL: 'Tất cả',
-  PENDING: 'Chờ thanh toán',
+  PENDING: 'Chưa thanh toán',
   PAID: 'Đã thanh toán',
 };
 
 const paymentMethodLabelMap = {
   COD: 'COD',
   BANK_TRANSFER: 'Chuyển khoản',
+};
+
+const formatDateTime = (value) => {
+  if (!value) return '';
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+
+  return date.toLocaleString('vi-VN', {
+    hour: '2-digit',
+    minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+  });
+};
+
+const getPaymentStatusLabel = (order) => {
+  if ((order.paymentStatus || 'PENDING') === 'PAID') {
+    return 'Đã thanh toán';
+  }
+
+  return order.paymentMethod === 'BANK_TRANSFER'
+    ? 'Chờ xác nhận CK'
+    : 'Thu khi nhận hàng';
+};
+
+const getPaymentBadgeClass = (order) => {
+  if ((order.paymentStatus || 'PENDING') === 'PAID') {
+    return 'payment-paid';
+  }
+
+  return order.paymentMethod === 'BANK_TRANSFER'
+    ? 'status-pending'
+    : 'payment-cod';
+};
+
+const getPaymentActionLabel = (order) => {
+  if ((order.paymentStatus || 'PENDING') === 'PAID') {
+    return 'Chuyển về chờ xác nhận';
+  }
+
+  return order.paymentMethod === 'BANK_TRANSFER'
+    ? 'Xác nhận đã nhận tiền'
+    : 'Đánh dấu đã thanh toán';
+};
+
+const getPaymentActionNote = (order) => {
+  if (order.status === 'CANCELLED') {
+    return (order.paymentStatus || 'PENDING') === 'PAID'
+      ? 'Đơn đã hủy nhưng đang mang trạng thái đã thanh toán. Bạn có thể đưa về chờ xác nhận để chỉnh dữ liệu.'
+      : 'Đơn đã hủy nên không thể đánh dấu đã thanh toán.';
+  }
+
+  if ((order.paymentStatus || 'PENDING') === 'PAID') {
+    return 'Dùng khi cần trả đơn về trạng thái chờ xác nhận.';
+  }
+
+  return order.paymentMethod === 'BANK_TRANSFER'
+    ? 'Dùng sau khi đối chiếu đúng mã giao dịch.'
+    : 'Dùng khi khách đã thanh toán trực tiếp.';
 };
 
 export default function OrdersPage() {
@@ -96,27 +156,32 @@ export default function OrdersPage() {
   const filteredOrders = orders.filter((order) => {
     if (paymentFilter !== 'ALL' && (order.paymentStatus || 'PENDING') !== paymentFilter) return false;
     if (statusFilter !== 'ALL' && order.status !== statusFilter) return false;
+
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
       const name = (order.userId?.name || '').toLowerCase();
       const email = (order.userId?.email || '').toLowerCase();
       const ref = (order.transferReference || '').toLowerCase();
       const shortId = order._id.slice(-8).toLowerCase();
-      if (!name.includes(q) && !email.includes(q) && !ref.includes(q) && !shortId.includes(q)) return false;
+
+      if (!name.includes(q) && !email.includes(q) && !ref.includes(q) && !shortId.includes(q)) {
+        return false;
+      }
     }
+
     return true;
   });
 
   const exportCSV = () => {
     const headers = ['STT', 'Khách hàng', 'Tổng tiền', 'Thanh toán', 'TT thanh toán', 'Trạng thái', 'Ngày tạo'];
-    const rows = filteredOrders.map((o, idx) => [
+    const rows = filteredOrders.map((order, idx) => [
       idx + 1,
-      o.userId?.name || 'N/A',
-      Number(o.totalAmount || 0),
-      paymentMethodLabelMap[o.paymentMethod] || o.paymentMethod || 'COD',
-      paymentStatusLabelMap[o.paymentStatus || 'PENDING'] || (o.paymentStatus || 'PENDING'),
-      statusLabelMap[o.status] || o.status,
-      new Date(o.createdAt).toLocaleDateString('vi-VN')
+      order.userId?.name || 'N/A',
+      Number(order.totalAmount || 0),
+      paymentMethodLabelMap[order.paymentMethod] || order.paymentMethod || 'COD',
+      getPaymentStatusLabel(order),
+      statusLabelMap[order.status] || order.status,
+      new Date(order.createdAt).toLocaleDateString('vi-VN'),
     ]);
 
     const csv = [headers, ...rows]
@@ -137,7 +202,7 @@ export default function OrdersPage() {
   return (
     <Layout>
       <h1>Đơn hàng</h1>
-      <p className="helper">Cập nhật trạng thái đơn và trạng thái thanh toán ngay trên bảng.</p>
+      <p className="helper">Theo dõi thanh toán chuyển khoản mô phỏng, đối chiếu mã giao dịch và cập nhật trạng thái đơn ngay trên bảng.</p>
 
       {loading ? <p className="page-card">Đang tải đơn hàng...</p> : null}
       {error ? <p className="error">{error}</p> : null}
@@ -150,7 +215,7 @@ export default function OrdersPage() {
               <input
                 className="order-search-input"
                 type="text"
-                placeholder="Tìm theo tên, ID đơn, mã CK..."
+                placeholder="Tìm theo tên, ID đơn, mã giao dịch..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
@@ -163,8 +228,10 @@ export default function OrdersPage() {
                 onChange={(e) => setStatusFilter(e.target.value)}
               >
                 <option value="ALL">Tất cả</option>
-                {statuses.map((s) => (
-                  <option key={s} value={s}>{statusLabelMap[s] || s}</option>
+                {statuses.map((status) => (
+                  <option key={status} value={status}>
+                    {statusLabelMap[status] || status}
+                  </option>
                 ))}
               </select>
             </div>
@@ -188,50 +255,84 @@ export default function OrdersPage() {
           </div>
 
           <div className="page-card table-wrap">
-          <table className="orders-table">
-            <thead>
-              <tr><th>Mã đơn</th><th>Khách hàng</th><th>Tổng tiền</th><th>Phương thức</th><th>Thanh toán</th><th>Cập nhật thanh toán</th><th>Trạng thái</th><th>Cập nhật đơn</th></tr>
-            </thead>
-            <tbody>
-              {filteredOrders.map((o, idx) => (
-                <tr key={o._id}>
-                  <td className="order-id-cell">#{String(idx + 1).padStart(3, '0')}</td>
-                  <td>{o.userId?.name || 'N/A'}</td>
-                  <td className="order-total-cell">{Number(o.totalAmount || 0).toLocaleString()} đ</td>
-                  <td>{paymentMethodLabelMap[o.paymentMethod] || o.paymentMethod || 'COD'}</td>
-                  <td>
-                    <span className={`status-badge ${o.paymentStatus === 'PAID' ? 'payment-paid' : 'status-pending'}`}>
-                      {paymentStatusLabelMap[o.paymentStatus || 'PENDING'] || (o.paymentStatus || 'PENDING')}
-                    </span>
-                    {o.transferReference ? <div className="helper">{o.transferReference}</div> : null}
-                  </td>
-                  <td>
-                    <select
-                      className="order-status-select"
-                      value={o.paymentStatus || 'PENDING'}
-                      onChange={(e) => updatePaymentStatus(o._id, e.target.value)}
-                      disabled={updatingPaymentId === o._id}
-                    >
-                      {paymentStatuses.filter((status) => status !== 'ALL').map((status) => (
-                        <option key={status} value={status}>{paymentStatusLabelMap[status] || status}</option>
-                      ))}
-                    </select>
-                  </td>
-                  <td><span className={`status-badge ${statusClassMap[o.status] || ''}`}>{statusLabelMap[o.status] || o.status}</span></td>
-                  <td>
-                    <select
-                      className="order-status-select"
-                      value={o.status}
-                      onChange={(e) => updateStatus(o._id, e.target.value)}
-                      disabled={updatingId === o._id}
-                    >
-                      {getStatusOptions(o.status).map((s) => <option key={s} value={s}>{statusLabelMap[s] || s}</option>)}
-                    </select>
-                  </td>
+            <table className="orders-table">
+              <thead>
+                <tr>
+                  <th>Mã đơn</th>
+                  <th>Khách hàng</th>
+                  <th>Tổng tiền</th>
+                  <th>Phương thức</th>
+                  <th>Thanh toán</th>
+                  <th>Xử lý thanh toán</th>
+                  <th>Trạng thái</th>
+                  <th>Cập nhật đơn</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredOrders.map((order, idx) => (
+                  <tr key={order._id}>
+                    <td className="order-id-cell">#{String(idx + 1).padStart(3, '0')}</td>
+                    <td>{order.userId?.name || 'N/A'}</td>
+                    <td className="order-total-cell">{Number(order.totalAmount || 0).toLocaleString()} đ</td>
+                    <td>{paymentMethodLabelMap[order.paymentMethod] || order.paymentMethod || 'COD'}</td>
+                    <td>
+                      <div className="payment-cell">
+                        <span className={`status-badge ${getPaymentBadgeClass(order)}`}>
+                          {getPaymentStatusLabel(order)}
+                        </span>
+                        <div className="payment-meta">
+                          {order.transferReference ? <div className="helper">Mã GD: {order.transferReference}</div> : null}
+                          {order.paymentDeadlineAt && (order.paymentStatus || 'PENDING') !== 'PAID' ? (
+                            <div className="helper">Hạn xác nhận: {formatDateTime(order.paymentDeadlineAt)}</div>
+                          ) : null}
+                          {order.paidAt ? <div className="helper">Đã duyệt lúc: {formatDateTime(order.paidAt)}</div> : null}
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="payment-action-stack">
+                        <button
+                          className={`${(order.paymentStatus || 'PENDING') === 'PAID' ? 'btn-ghost' : 'btn-edit'} payment-action-btn`}
+                          title={order.status === 'CANCELLED' && (order.paymentStatus || 'PENDING') !== 'PAID' ? 'Đơn đã hủy không thể đánh dấu đã thanh toán.' : ''}
+                          onClick={() =>
+                            updatePaymentStatus(
+                              order._id,
+                              (order.paymentStatus || 'PENDING') === 'PAID' ? 'PENDING' : 'PAID',
+                            )
+                          }
+                          disabled={
+                            updatingPaymentId === order._id ||
+                            (order.status === 'CANCELLED' && (order.paymentStatus || 'PENDING') !== 'PAID')
+                          }
+                        >
+                          {updatingPaymentId === order._id ? 'Đang cập nhật...' : getPaymentActionLabel(order)}
+                        </button>
+                        <div className="helper payment-action-note">{getPaymentActionNote(order)}</div>
+                      </div>
+                    </td>
+                    <td>
+                      <span className={`status-badge ${statusClassMap[order.status] || ''}`}>
+                        {statusLabelMap[order.status] || order.status}
+                      </span>
+                    </td>
+                    <td>
+                      <select
+                        className="order-status-select"
+                        value={order.status}
+                        onChange={(e) => updateStatus(order._id, e.target.value)}
+                        disabled={updatingId === order._id}
+                      >
+                        {getStatusOptions(order.status).map((status) => (
+                          <option key={status} value={status}>
+                            {statusLabelMap[status] || status}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </>
       )}

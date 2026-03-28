@@ -317,6 +317,8 @@ button:disabled {
 .order-toolbar {
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 
 .filter-group {
@@ -911,6 +913,10 @@ tbody tr:last-child td {
   background: var(--success-soft);
   color: var(--success);
 }
+.payment-cod {
+  background: #ecfeff;
+  color: #0f766e;
+}
 .status-confirmed {
   background: #eff6ff;
   color: #1d4ed8;
@@ -944,6 +950,32 @@ tbody tr:last-child td {
 .helper {
   color: var(--muted);
   font-size: 13px;
+}
+.payment-cell,
+.payment-meta,
+.payment-action-stack {
+  display: flex;
+  flex-direction: column;
+}
+
+.payment-cell,
+.payment-action-stack {
+  gap: 8px;
+  min-width: 190px;
+}
+
+.payment-meta {
+  gap: 3px;
+}
+
+.payment-action-btn {
+  width: 100%;
+  justify-content: center;
+}
+
+.payment-action-note {
+  max-width: 220px;
+  line-height: 1.45;
 }
 .page-card {
   background: var(--card);

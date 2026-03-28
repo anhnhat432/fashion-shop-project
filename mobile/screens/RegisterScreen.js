@@ -62,9 +62,11 @@ export default function RegisterScreen() {
     const newErrors = {};
     if (!payload.name) newErrors.name = "Họ tên không được để trống";
     if (!payload.email) newErrors.email = "Email không được để trống";
-    else if (!payload.email.includes("@")) newErrors.email = "Email không hợp lệ";
+    else if (!payload.email.includes("@"))
+      newErrors.email = "Email không hợp lệ";
     if (!payload.password) newErrors.password = "Mật khẩu không được để trống";
-    else if (payload.password.length < 6) newErrors.password = "Mật khẩu tối thiểu 6 ký tự";
+    else if (payload.password.length < 6)
+      newErrors.password = "Mật khẩu tối thiểu 6 ký tự";
     if (payload.phone && payload.phone.replace(/\D/g, "").length < 9)
       newErrors.phone = "Số điện thoại cần tối thiểu 9 số";
 
@@ -85,9 +87,24 @@ export default function RegisterScreen() {
 
   const fields = [
     { key: "name", label: "Họ tên", icon: "person-outline" },
-    { key: "email", label: "Email", icon: "mail-outline", keyboardType: "email-address" },
-    { key: "password", label: "Mật khẩu", icon: "lock-closed-outline", secureTextEntry: true },
-    { key: "phone", label: "Số điện thoại", icon: "call-outline", keyboardType: "phone-pad" },
+    {
+      key: "email",
+      label: "Email",
+      icon: "mail-outline",
+      keyboardType: "email-address",
+    },
+    {
+      key: "password",
+      label: "Mật khẩu",
+      icon: "lock-closed-outline",
+      secureTextEntry: true,
+    },
+    {
+      key: "phone",
+      label: "Số điện thoại",
+      icon: "call-outline",
+      keyboardType: "phone-pad",
+    },
     { key: "address", label: "Địa chỉ", icon: "location-outline" },
   ];
 
@@ -97,7 +114,8 @@ export default function RegisterScreen() {
         <Text style={styles.heroEyebrow}>Tham gia ngay</Text>
         <Text style={styles.title}>Tạo tài khoản mới</Text>
         <Text style={styles.subtitle}>
-          Lưu thông tin mua sắm, theo dõi đơn hàng và thanh toán nhanh hơn cho những lần sau.
+          Lưu thông tin mua sắm, theo dõi đơn hàng và thanh toán nhanh hơn cho
+          những lần sau.
         </Text>
       </View>
 
@@ -105,20 +123,34 @@ export default function RegisterScreen() {
         {fields.map((item) => (
           <View key={item.key} style={styles.fieldWrap}>
             <Text style={styles.fieldLabel}>{item.label}</Text>
-            <View style={[styles.inputShell, errors[item.key] ? styles.inputShellError : null]}>
-              <Ionicons name={item.icon} size={18} color={errors[item.key] ? "#dc2626" : "#4f46e5"} />
+            <View
+              style={[
+                styles.inputShell,
+                errors[item.key] ? styles.inputShellError : null,
+              ]}
+            >
+              <Ionicons
+                name={item.icon}
+                size={18}
+                color={errors[item.key] ? "#dc2626" : "#4f46e5"}
+              />
               <TextInput
                 style={styles.input}
                 placeholder={item.label}
                 placeholderTextColor="#9ca3af"
-                secureTextEntry={item.key === "password" ? !showPassword : false}
+                secureTextEntry={
+                  item.key === "password" ? !showPassword : false
+                }
                 value={form[item.key]}
                 onChangeText={(v) => handleChange(item.key, v)}
                 autoCapitalize={item.key === "email" ? "none" : "sentences"}
                 keyboardType={item.keyboardType}
               />
               {item.key === "password" ? (
-                <Pressable onPress={() => setShowPassword((v) => !v)} hitSlop={8}>
+                <Pressable
+                  onPress={() => setShowPassword((v) => !v)}
+                  hitSlop={8}
+                >
                   <Ionicons
                     name={showPassword ? "eye-off-outline" : "eye-outline"}
                     size={18}

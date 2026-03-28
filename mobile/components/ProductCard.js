@@ -26,115 +26,136 @@ export default function ProductCard({ product, onPress }) {
   const reviewCount = Number(product.reviewCount || 0);
 
   const onPressIn = () => {
-    Animated.spring(scaleAnim, { toValue: 0.97, useNativeDriver: true, friction: 8 }).start();
+    Animated.spring(scaleAnim, {
+      toValue: 0.97,
+      useNativeDriver: true,
+      friction: 8,
+    }).start();
   };
   const onPressOut = () => {
-    Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, friction: 8 }).start();
+    Animated.spring(scaleAnim, {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 8,
+    }).start();
   };
   const onImageLoad = () => {
-    Animated.timing(imgOpacity, { toValue: 1, duration: 250, useNativeDriver: true }).start();
+    Animated.timing(imgOpacity, {
+      toValue: 1,
+      duration: 250,
+      useNativeDriver: true,
+    }).start();
     setImageLoaded(true);
   };
 
   return (
     <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
-    <Pressable style={styles.card} onPress={onPress} onPressIn={onPressIn} onPressOut={onPressOut}>
-      <View>
-        <View style={styles.imagePlaceholder}>
-          <Animated.Image
-            source={{ uri: product.image || "https://picsum.photos/200" }}
-            style={[styles.image, { opacity: imgOpacity }]}
-            onLoad={onImageLoad}
-          />
-        </View>
-        <View style={styles.badgeRow}>
-          <View style={styles.badgeClusterLeft}>
-            <View style={styles.badgePrimary}>
-              <Text style={styles.badgePrimaryText}>
-                {isOnSale ? "Đang ưu đãi" : "Mới lên kệ"}
-              </Text>
-            </View>
-            {isLiked ? (
-              <View style={styles.badgeSaved}>
-                <Ionicons name="heart" size={12} color="#b91c1c" />
-                <Text style={styles.badgeSavedText}>Đã lưu</Text>
-              </View>
-            ) : null}
-          </View>
-          <View style={styles.badgeClusterRight}>
-            <View style={styles.ratingPill}>
-              <Ionicons name="star" size={12} color="#f59e0b" />
-              <Text style={styles.ratingPillText}>{rating}</Text>
-            </View>
-            <Pressable
-              style={styles.wishlistBtn}
-              onPress={async () => {
-                setTogglingWishlist(true);
-                try { await toggleWishlist(product); } finally { setTogglingWishlist(false); }
-              }}
-              disabled={togglingWishlist}
-            >
-              {togglingWishlist ? (
-                <ActivityIndicator size={14} color="#4f46e5" />
-              ) : (
-                <Ionicons
-                  name={isLiked ? "heart" : "heart-outline"}
-                  size={18}
-                  color={isLiked ? "#dc2626" : "#4f46e5"}
-                />
-              )}
-            </Pressable>
-            {isLowStock ? (
-              <View style={styles.badgeWarn}>
-                <Text style={styles.badgeWarnText}>Sắp hết hàng</Text>
-              </View>
-            ) : null}
-          </View>
-        </View>
-        <View style={styles.imageFooterRow}>
-          <View style={styles.imageFooterChip}>
-            <Ionicons
-              name="chatbubble-ellipses-outline"
-              size={12}
-              color="#4f46e5"
+      <Pressable
+        style={styles.card}
+        onPress={onPress}
+        onPressIn={onPressIn}
+        onPressOut={onPressOut}
+      >
+        <View>
+          <View style={styles.imagePlaceholder}>
+            <Animated.Image
+              source={{ uri: product.image || "https://picsum.photos/200" }}
+              style={[styles.image, { opacity: imgOpacity }]}
+              onLoad={onImageLoad}
             />
-            <Text style={styles.imageFooterText}>{reviewCount} đánh giá</Text>
           </View>
-          {isOnSale ? (
-            <View style={styles.imageFooterChipWarm}>
-              <Ionicons name="pricetag-outline" size={12} color="#4f46e5" />
-              <Text style={styles.imageFooterTextWarm}>Có giá ưu đãi</Text>
+          <View style={styles.badgeRow}>
+            <View style={styles.badgeClusterLeft}>
+              <View style={styles.badgePrimary}>
+                <Text style={styles.badgePrimaryText}>
+                  {isOnSale ? "Đang ưu đãi" : "Mới lên kệ"}
+                </Text>
+              </View>
+              {isLiked ? (
+                <View style={styles.badgeSaved}>
+                  <Ionicons name="heart" size={12} color="#b91c1c" />
+                  <Text style={styles.badgeSavedText}>Đã lưu</Text>
+                </View>
+              ) : null}
             </View>
+            <View style={styles.badgeClusterRight}>
+              <View style={styles.ratingPill}>
+                <Ionicons name="star" size={12} color="#f59e0b" />
+                <Text style={styles.ratingPillText}>{rating}</Text>
+              </View>
+              <Pressable
+                style={styles.wishlistBtn}
+                onPress={async () => {
+                  setTogglingWishlist(true);
+                  try {
+                    await toggleWishlist(product);
+                  } finally {
+                    setTogglingWishlist(false);
+                  }
+                }}
+                disabled={togglingWishlist}
+              >
+                {togglingWishlist ? (
+                  <ActivityIndicator size={14} color="#4f46e5" />
+                ) : (
+                  <Ionicons
+                    name={isLiked ? "heart" : "heart-outline"}
+                    size={18}
+                    color={isLiked ? "#dc2626" : "#4f46e5"}
+                  />
+                )}
+              </Pressable>
+              {isLowStock ? (
+                <View style={styles.badgeWarn}>
+                  <Text style={styles.badgeWarnText}>Sắp hết hàng</Text>
+                </View>
+              ) : null}
+            </View>
+          </View>
+          <View style={styles.imageFooterRow}>
+            <View style={styles.imageFooterChip}>
+              <Ionicons
+                name="chatbubble-ellipses-outline"
+                size={12}
+                color="#4f46e5"
+              />
+              <Text style={styles.imageFooterText}>{reviewCount} đánh giá</Text>
+            </View>
+            {isOnSale ? (
+              <View style={styles.imageFooterChipWarm}>
+                <Ionicons name="pricetag-outline" size={12} color="#4f46e5" />
+                <Text style={styles.imageFooterTextWarm}>Có giá ưu đãi</Text>
+              </View>
+            ) : null}
+          </View>
+        </View>
+        <View style={styles.content}>
+          <View style={styles.headerRow}>
+            <Text style={styles.category} numberOfLines={1}>
+              {product.categoryId?.name || "Thời trang"}
+            </Text>
+            <Text style={styles.stock}>Kho: {Number(product.stock || 0)}</Text>
+          </View>
+          <Text style={styles.name} numberOfLines={2}>
+            {product.name}
+          </Text>
+          <Text style={styles.price}>
+            {Number(product.salePrice || product.price || 0).toLocaleString()} đ
+          </Text>
+          {product.salePrice ? (
+            <Text style={styles.oldPrice}>
+              {Number(product.price || 0).toLocaleString()} d
+            </Text>
           ) : null}
-        </View>
-      </View>
-      <View style={styles.content}>
-        <View style={styles.headerRow}>
-          <Text style={styles.category} numberOfLines={1}>
-            {product.categoryId?.name || "Thời trang"}
+          <Text style={styles.rating}>
+            ★ {Number(product.averageRating || 0).toFixed(1)} (
+            {product.reviewCount || 0} đánh giá)
           </Text>
-          <Text style={styles.stock}>Kho: {Number(product.stock || 0)}</Text>
-        </View>
-        <Text style={styles.name} numberOfLines={2}>
-          {product.name}
-        </Text>
-        <Text style={styles.price}>
-          {Number(product.salePrice || product.price || 0).toLocaleString()} đ
-        </Text>
-        {product.salePrice ? (
-          <Text style={styles.oldPrice}>
-            {Number(product.price || 0).toLocaleString()} d
+          <Text style={styles.desc} numberOfLines={2}>
+            {product.description || "Sản phẩm demo cho môn học"}
           </Text>
-        ) : null}
-        <Text style={styles.rating}>
-          ★ {Number(product.averageRating || 0).toFixed(1)} (
-          {product.reviewCount || 0} đánh giá)
-        </Text>
-        <Text style={styles.desc} numberOfLines={2}>
-          {product.description || "Sản phẩm demo cho môn học"}
-        </Text>
-      </View>
-    </Pressable>
+        </View>
+      </Pressable>
     </Animated.View>
   );
 }

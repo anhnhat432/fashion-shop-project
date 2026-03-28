@@ -84,11 +84,16 @@ export default function OrderHistoryScreen() {
     }
   }, [loading, revealAnim]);
 
-  const paidCount = orders.filter((item) => item.paymentStatus === "PAID").length;
-  const pendingCount = orders.filter((item) => item.paymentStatus !== "PAID").length;
-  const displayedOrders = statusFilter === "ALL"
-    ? orders
-    : orders.filter((item) => item.status === statusFilter);
+  const paidCount = orders.filter(
+    (item) => item.paymentStatus === "PAID",
+  ).length;
+  const pendingCount = orders.filter(
+    (item) => item.paymentStatus !== "PAID",
+  ).length;
+  const displayedOrders =
+    statusFilter === "ALL"
+      ? orders
+      : orders.filter((item) => item.status === statusFilter);
 
   const cancelOrder = async (orderId) => {
     Alert.alert(
@@ -154,10 +159,18 @@ export default function OrderHistoryScreen() {
         {STATUS_FILTERS.map((f) => (
           <Pressable
             key={f.key}
-            style={[styles.filterChip, statusFilter === f.key && styles.filterChipActive]}
+            style={[
+              styles.filterChip,
+              statusFilter === f.key && styles.filterChipActive,
+            ]}
             onPress={() => setStatusFilter(f.key)}
           >
-            <Text style={[styles.filterChipText, statusFilter === f.key && styles.filterChipTextActive]}>
+            <Text
+              style={[
+                styles.filterChipText,
+                statusFilter === f.key && styles.filterChipTextActive,
+              ]}
+            >
               {f.label}
             </Text>
           </Pressable>
@@ -267,28 +280,61 @@ export default function OrderHistoryScreen() {
             ) : (
               <View style={styles.stepperWrap}>
                 {[
-                  { key: "PENDING", label: "Chờ xác\nnhận", icon: "time-outline" },
-                  { key: "CONFIRMED", label: "Đã xác\nnhận", icon: "checkmark-circle-outline" },
-                  { key: "SHIPPING", label: "Đang\ngiao", icon: "bicycle-outline" },
-                  { key: "DELIVERED", label: "Đã\ngiao", icon: "bag-check-outline" },
+                  {
+                    key: "PENDING",
+                    label: "Chờ xác\nnhận",
+                    icon: "time-outline",
+                  },
+                  {
+                    key: "CONFIRMED",
+                    label: "Đã xác\nnhận",
+                    icon: "checkmark-circle-outline",
+                  },
+                  {
+                    key: "SHIPPING",
+                    label: "Đang\ngiao",
+                    icon: "bicycle-outline",
+                  },
+                  {
+                    key: "DELIVERED",
+                    label: "Đã\ngiao",
+                    icon: "bag-check-outline",
+                  },
                 ].map((step, idx) => {
-                  const STEP_ORDER = ["PENDING", "CONFIRMED", "SHIPPING", "DELIVERED"];
+                  const STEP_ORDER = [
+                    "PENDING",
+                    "CONFIRMED",
+                    "SHIPPING",
+                    "DELIVERED",
+                  ];
                   const currentIdx = STEP_ORDER.indexOf(item.status);
                   const done = currentIdx >= idx;
                   return (
                     <React.Fragment key={step.key}>
                       {idx > 0 && (
-                        <View style={[styles.stepLine, done && styles.stepLineDone]} />
+                        <View
+                          style={[styles.stepLine, done && styles.stepLineDone]}
+                        />
                       )}
                       <View style={styles.stepNode}>
-                        <View style={[styles.stepCircle, done && styles.stepCircleDone]}>
+                        <View
+                          style={[
+                            styles.stepCircle,
+                            done && styles.stepCircleDone,
+                          ]}
+                        >
                           <Ionicons
                             name={step.icon}
                             size={14}
                             color={done ? "#fff" : "#94a3b8"}
                           />
                         </View>
-                        <Text style={[styles.stepLabel, done && styles.stepLabelDone]}>
+                        <Text
+                          style={[
+                            styles.stepLabel,
+                            done && styles.stepLabelDone,
+                          ]}
+                        >
                           {step.label}
                         </Text>
                       </View>
@@ -299,12 +345,11 @@ export default function OrderHistoryScreen() {
             )}
             <View style={styles.metaRow}>
               <Text style={styles.meta}>
-                Phương thức: {paymentMethodMap[item.paymentMethod] || item.paymentMethod}
+                Phương thức:{" "}
+                {paymentMethodMap[item.paymentMethod] || item.paymentMethod}
               </Text>
               {item.transferReference ? (
-                <Text style={styles.meta}>
-                  Mã CK: {item.transferReference}
-                </Text>
+                <Text style={styles.meta}>Mã CK: {item.transferReference}</Text>
               ) : null}
             </View>
 
@@ -321,7 +366,8 @@ export default function OrderHistoryScreen() {
                       </Text>
                       <Text style={styles.orderItemMeta}>
                         {orderItem.size || "Một cỡ"} •{" "}
-                        {orderItem.color || "Trung tính"} • x{orderItem.quantity}
+                        {orderItem.color || "Trung tính"} • x
+                        {orderItem.quantity}
                       </Text>
                     </View>
                     <Text style={styles.orderItemPrice}>
@@ -391,7 +437,12 @@ const styles = StyleSheet.create({
     backgroundColor: "#f1f5f9",
   },
   headerWrap: { paddingBottom: 12 },
-  filterScroll: { flexDirection: "row", gap: 8, paddingHorizontal: 0, paddingVertical: 10 },
+  filterScroll: {
+    flexDirection: "row",
+    gap: 8,
+    paddingHorizontal: 0,
+    paddingVertical: 10,
+  },
   filterChip: {
     backgroundColor: "#fff",
     borderRadius: 999,
@@ -461,7 +512,11 @@ const styles = StyleSheet.create({
   statusBadgeText: { fontFamily: FONTS.bold, fontSize: 12 },
   paidBadgeText: { color: "#166534" },
   pendingBadgeText: { color: "#92400e" },
-  stepperWrap: { flexDirection: "row", alignItems: "flex-start", paddingVertical: 4 },
+  stepperWrap: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingVertical: 4,
+  },
   stepNode: { alignItems: "center", gap: 4, width: 52 },
   stepCircle: {
     width: 30,
@@ -484,7 +539,12 @@ const styles = StyleSheet.create({
   stepLabelDone: { color: "#4f46e5", fontFamily: FONTS.medium },
   stepLine: { flex: 1, height: 1.5, backgroundColor: "#e2e8f0", marginTop: 14 },
   stepLineDone: { backgroundColor: "#4f46e5" },
-  cancelledRow: { flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 6 },
+  cancelledRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingVertical: 6,
+  },
   cancelledText: { color: "#ef4444", fontFamily: FONTS.medium, fontSize: 13 },
   metaRow: { gap: 2 },
   meta: { color: "#6b7280", fontFamily: FONTS.regular },

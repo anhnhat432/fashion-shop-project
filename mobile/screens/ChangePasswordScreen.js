@@ -24,10 +24,14 @@ export default function ChangePasswordScreen({ navigation }) {
 
   const validate = () => {
     const next = {};
-    if (!currentPassword) next.currentPassword = "Vui lòng nhập mật khẩu hiện tại";
-    if (!newPassword || newPassword.length < 6) next.newPassword = "Mật khẩu mới tối thiểu 6 ký tự";
-    if (newPassword === currentPassword) next.newPassword = "Mật khẩu mới phải khác mật khẩu cũ";
-    if (newPassword !== confirmPassword) next.confirmPassword = "Mật khẩu xác nhận không khớp";
+    if (!currentPassword)
+      next.currentPassword = "Vui lòng nhập mật khẩu hiện tại";
+    if (!newPassword || newPassword.length < 6)
+      next.newPassword = "Mật khẩu mới tối thiểu 6 ký tự";
+    if (newPassword === currentPassword)
+      next.newPassword = "Mật khẩu mới phải khác mật khẩu cũ";
+    if (newPassword !== confirmPassword)
+      next.confirmPassword = "Mật khẩu xác nhận không khớp";
     setErrors(next);
     return Object.keys(next).length === 0;
   };
@@ -36,12 +40,18 @@ export default function ChangePasswordScreen({ navigation }) {
     if (!validate()) return;
     setLoading(true);
     try {
-      await api.put("/auth/me/change-password", { currentPassword, newPassword });
+      await api.put("/auth/me/change-password", {
+        currentPassword,
+        newPassword,
+      });
       Alert.alert("Thành công", "Mật khẩu đã được thay đổi", [
         { text: "OK", onPress: () => navigation.goBack() },
       ]);
     } catch (error) {
-      Alert.alert("Lỗi", error.response?.data?.message || "Không thể đổi mật khẩu");
+      Alert.alert(
+        "Lỗi",
+        error.response?.data?.message || "Không thể đổi mật khẩu",
+      );
     } finally {
       setLoading(false);
     }
@@ -51,41 +61,68 @@ export default function ChangePasswordScreen({ navigation }) {
     {
       label: "Mật khẩu hiện tại",
       value: currentPassword,
-      onChange: (v) => { setCurrentPassword(v); setErrors((p) => ({ ...p, currentPassword: "" })); },
+      onChange: (v) => {
+        setCurrentPassword(v);
+        setErrors((p) => ({ ...p, currentPassword: "" }));
+      },
       errorKey: "currentPassword",
       icon: "lock-closed-outline",
     },
     {
       label: "Mật khẩu mới",
       value: newPassword,
-      onChange: (v) => { setNewPassword(v); setErrors((p) => ({ ...p, newPassword: "" })); },
+      onChange: (v) => {
+        setNewPassword(v);
+        setErrors((p) => ({ ...p, newPassword: "" }));
+      },
       errorKey: "newPassword",
       icon: "lock-open-outline",
     },
     {
       label: "Xác nhận mật khẩu mới",
       value: confirmPassword,
-      onChange: (v) => { setConfirmPassword(v); setErrors((p) => ({ ...p, confirmPassword: "" })); },
+      onChange: (v) => {
+        setConfirmPassword(v);
+        setErrors((p) => ({ ...p, confirmPassword: "" }));
+      },
       errorKey: "confirmPassword",
       icon: "checkmark-circle-outline",
     },
   ];
 
   return (
-    <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
-      <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+    <KeyboardAvoidingView
+      style={{ flex: 1 }}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
         <View style={styles.heroCard}>
           <Text style={styles.heroEyebrow}>Bảo mật tài khoản</Text>
           <Text style={styles.heroTitle}>Đổi mật khẩu</Text>
-          <Text style={styles.heroSub}>Nhập mật khẩu hiện tại và mật khẩu mới để cập nhật.</Text>
+          <Text style={styles.heroSub}>
+            Nhập mật khẩu hiện tại và mật khẩu mới để cập nhật.
+          </Text>
         </View>
 
         <View style={styles.card}>
           {fields.map((field) => (
             <View key={field.errorKey} style={styles.fieldWrap}>
               <Text style={styles.fieldLabel}>{field.label}</Text>
-              <View style={[styles.inputShell, errors[field.errorKey] && styles.inputShellError]}>
-                <Ionicons name={field.icon} size={18} color={errors[field.errorKey] ? "#dc2626" : "#4f46e5"} />
+              <View
+                style={[
+                  styles.inputShell,
+                  errors[field.errorKey] && styles.inputShellError,
+                ]}
+              >
+                <Ionicons
+                  name={field.icon}
+                  size={18}
+                  color={errors[field.errorKey] ? "#dc2626" : "#4f46e5"}
+                />
                 <TextInput
                   style={styles.input}
                   value={field.value}

@@ -77,7 +77,8 @@ const getProducts = async (req, res, next) => {
     const query = {};
     let sortQuery = { createdAt: -1 };
 
-    if (search) query.name = { $regex: escapeRegex(search.trim()), $options: "i" };
+    if (search)
+      query.name = { $regex: escapeRegex(search.trim()), $options: "i" };
     if (categoryId) query.categoryId = categoryId;
     if (inStock === "true") query.stock = { $gt: 0 };
 
@@ -137,12 +138,10 @@ const createProduct = async (req, res, next) => {
   try {
     const payload = normalizePayload(req.body);
     if (!payload.name || Number.isNaN(payload.price) || !payload.categoryId) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "name, valid price, categoryId are required",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "name, valid price, categoryId are required",
+      });
     }
     if (
       payload.salePrice !== null &&
@@ -150,12 +149,10 @@ const createProduct = async (req, res, next) => {
         payload.salePrice <= 0 ||
         payload.salePrice > payload.price)
     ) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Sale price must be positive and less than price",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Sale price must be positive and less than price",
+      });
     }
 
     if (!(await ensureCategoryExists(payload.categoryId))) {
@@ -174,13 +171,11 @@ const createProduct = async (req, res, next) => {
     }
 
     const product = await Product.create(payload);
-    res
-      .status(201)
-      .json({
-        success: true,
-        message: "Product created",
-        data: enrichProduct(product),
-      });
+    res.status(201).json({
+      success: true,
+      message: "Product created",
+      data: enrichProduct(product),
+    });
   } catch (error) {
     next(error);
   }
@@ -204,12 +199,10 @@ const updateProduct = async (req, res, next) => {
       payload.salePrice !== undefined &&
       (Number.isNaN(payload.salePrice) || payload.salePrice <= 0)
     ) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Sale price must be a positive number",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Sale price must be a positive number",
+      });
     }
     if (
       payload.categoryId !== undefined &&

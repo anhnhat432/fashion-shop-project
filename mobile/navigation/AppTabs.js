@@ -18,8 +18,16 @@ function CartBadge() {
   useEffect(() => {
     if (cartCount && cartCount !== prevCount.current) {
       Animated.sequence([
-        Animated.spring(scaleAnim, { toValue: 1.35, useNativeDriver: true, friction: 3 }),
-        Animated.spring(scaleAnim, { toValue: 1, useNativeDriver: true, friction: 5 }),
+        Animated.spring(scaleAnim, {
+          toValue: 1.35,
+          useNativeDriver: true,
+          friction: 3,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          friction: 5,
+        }),
       ]).start();
     }
     prevCount.current = cartCount;
@@ -88,9 +96,21 @@ export default function AppTabs() {
         },
       })}
     >
-      <Tab.Screen name="Home" component={HomeScreen} options={{ title: "Khám phá" }} />
-      <Tab.Screen name="Cart" component={CartScreen} options={{ title: "Giỏ hàng" }} />
-      <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: "Tài khoản" }} />
+      <Tab.Screen
+        name="Home"
+        component={HomeScreen}
+        options={{ title: "Khám phá" }}
+      />
+      <Tab.Screen
+        name="Cart"
+        component={CartScreen}
+        options={{ title: "Giỏ hàng" }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ title: "Tài khoản" }}
+      />
     </Tab.Navigator>
   );
 }

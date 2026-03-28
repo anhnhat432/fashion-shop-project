@@ -17,7 +17,10 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 20,
-  message: { success: false, message: "Too many requests, please try again later" },
+  message: {
+    success: false,
+    message: "Too many requests, please try again later",
+  },
   standardHeaders: true,
   legacyHeaders: false,
 });
@@ -25,20 +28,26 @@ const authLimiter = rateLimit({
 const generalLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 300,
-  message: { success: false, message: "Too many requests, please try again later" },
+  message: {
+    success: false,
+    message: "Too many requests, please try again later",
+  },
   standardHeaders: true,
   legacyHeaders: false,
 });
 
 const app = express();
 app.use(helmet());
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) return callback(null, true);
-    callback(new Error("Not allowed by CORS"));
-  },
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin || allowedOrigins.includes(origin))
+        return callback(null, true);
+      callback(new Error("Not allowed by CORS"));
+    },
+    credentials: true,
+  }),
+);
 app.use(express.json({ limit: "2mb" }));
 app.use(morgan("dev"));
 

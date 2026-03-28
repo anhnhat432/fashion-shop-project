@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import {
   ActivityIndicator,
   Animated,
@@ -68,7 +74,12 @@ export default function HomeScreen({ navigation }) {
     else setLoading(true);
     setError("");
     try {
-      const params = { search: nextSearch.trim(), sort: nextSortKey, page: pageNum, limit: 10 };
+      const params = {
+        search: nextSearch.trim(),
+        sort: nextSortKey,
+        page: pageNum,
+        limit: 10,
+      };
       if (nextCategoryId) params.categoryId = nextCategoryId;
       if (nextInStockOnly) params.inStock = true;
       const res = await api.get("/products", { params });
@@ -115,13 +126,16 @@ export default function HomeScreen({ navigation }) {
   };
 
   // Debounce: tự động search sau 500ms khi user gõ
-  const onSearchTextChange = useCallback((text) => {
-    setSearch(text);
-    if (debounceTimer.current) clearTimeout(debounceTimer.current);
-    debounceTimer.current = setTimeout(() => {
-      fetchProducts(text, selectedCategoryId, sortKey, inStockOnly);
-    }, 500);
-  }, [selectedCategoryId, sortKey, inStockOnly]);
+  const onSearchTextChange = useCallback(
+    (text) => {
+      setSearch(text);
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+      debounceTimer.current = setTimeout(() => {
+        fetchProducts(text, selectedCategoryId, sortKey, inStockOnly);
+      }, 500);
+    },
+    [selectedCategoryId, sortKey, inStockOnly],
+  );
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -136,8 +150,23 @@ export default function HomeScreen({ navigation }) {
     if (loadingMore || !hasMore) return;
     const nextPage = page + 1;
     setPage(nextPage);
-    fetchProducts(search, selectedCategoryId, sortKey, inStockOnly, nextPage, true);
-  }, [loadingMore, hasMore, page, search, selectedCategoryId, sortKey, inStockOnly]);
+    fetchProducts(
+      search,
+      selectedCategoryId,
+      sortKey,
+      inStockOnly,
+      nextPage,
+      true,
+    );
+  }, [
+    loadingMore,
+    hasMore,
+    page,
+    search,
+    selectedCategoryId,
+    sortKey,
+    inStockOnly,
+  ]);
 
   const onSelectCategory = (categoryId) => {
     setSelectedCategoryId(categoryId);
@@ -210,7 +239,8 @@ export default function HomeScreen({ navigation }) {
           Nâng tủ đồ mỗi ngày với những món dễ phối.
         </Text>
         <Text style={styles.heroSubtitle}>
-          Chọn nhanh theo danh mục, xem hàng mới và thanh toán gọn trong vài bước.
+          Chọn nhanh theo danh mục, xem hàng mới và thanh toán gọn trong vài
+          bước.
         </Text>
 
         <View style={styles.heroStatsRow}>
@@ -229,7 +259,11 @@ export default function HomeScreen({ navigation }) {
         </View>
       </View>
 
-      <SearchBar value={search} onChangeText={onSearchTextChange} onSearch={onSearch} />
+      <SearchBar
+        value={search}
+        onChangeText={onSearchTextChange}
+        onSearch={onSearch}
+      />
 
       <CategoryList
         categories={categories}
@@ -497,7 +531,9 @@ export default function HomeScreen({ navigation }) {
                   <Text style={styles.loadMoreText}>Đang tải thêm...</Text>
                 </View>
               ) : !hasMore && products.length > 0 ? (
-                <Text style={styles.allLoadedText}>Đã hiển thị đầy đủ {total} sản phẩm</Text>
+                <Text style={styles.allLoadedText}>
+                  Đã hiển thị đầy đủ {total} sản phẩm
+                </Text>
               ) : null
             }
             refreshControl={

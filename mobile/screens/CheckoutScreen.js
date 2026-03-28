@@ -355,7 +355,9 @@ export default function CheckoutScreen({ navigation }) {
               <Text style={styles.orderPreviewText}>{itemCount} sản phẩm</Text>
             </View>
             <View style={styles.orderPreviewChip}>
-              <Text style={styles.orderPreviewText}>{paymentMethodLabelMap[paymentMethod] || paymentMethod}</Text>
+              <Text style={styles.orderPreviewText}>
+                {paymentMethodLabelMap[paymentMethod] || paymentMethod}
+              </Text>
             </View>
           </View>
           <View style={styles.summaryRow}>

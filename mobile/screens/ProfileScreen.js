@@ -90,7 +90,14 @@ export default function ProfileScreen({ navigation }) {
         styles.container,
         {
           opacity: revealAnim,
-          transform: [{ translateY: revealAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }],
+          transform: [
+            {
+              translateY: revealAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [14, 0],
+              }),
+            },
+          ],
         },
       ]}
       contentContainerStyle={styles.contentContainer}

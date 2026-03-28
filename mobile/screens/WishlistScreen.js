@@ -68,7 +68,9 @@ export default function WishlistScreen({ navigation }) {
                 <Text style={styles.eyebrow}>Đã lưu</Text>
                 <View style={styles.activeFilterBadge}>
                   <Text style={styles.activeFilterBadgeEyebrow}>Bộ lọc</Text>
-                  <Text style={styles.activeFilterBadgeText}>{activeFilterShortLabel}</Text>
+                  <Text style={styles.activeFilterBadgeText}>
+                    {activeFilterShortLabel}
+                  </Text>
                 </View>
               </View>
               <Text style={styles.title}>Sản phẩm yêu thích của bạn</Text>
@@ -98,7 +100,9 @@ export default function WishlistScreen({ navigation }) {
             {loading ? (
               <View style={styles.loadingRow}>
                 <ActivityIndicator size="small" color="#4f46e5" />
-                <Text style={styles.loadingText}>Đang đồng bộ danh sách yêu thích...</Text>
+                <Text style={styles.loadingText}>
+                  Đang đồng bộ danh sách yêu thích...
+                </Text>
               </View>
             ) : null}
 

@@ -286,7 +286,8 @@ export default function ProductDetailScreen({ route, navigation }) {
     } catch (wishlistError) {
       Alert.alert(
         "Lỗi",
-        wishlistError.response?.data?.message || "Không thể cập nhật danh sách yêu thích",
+        wishlistError.response?.data?.message ||
+          "Không thể cập nhật danh sách yêu thích",
       );
     }
   };
@@ -351,7 +352,11 @@ export default function ProductDetailScreen({ route, navigation }) {
         : `Có sẵn ${stock} sản phẩm`;
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content} scrollEventThrottle={16}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      scrollEventThrottle={16}
+    >
       <Animated.View
         style={{
           opacity: introAnim,
@@ -371,7 +376,11 @@ export default function ProductDetailScreen({ route, navigation }) {
               source={{ uri: selectedImage }}
               style={[styles.image, { opacity: mainImgOpacity }]}
               onLoad={() => {
-                Animated.timing(mainImgOpacity, { toValue: 1, duration: 300, useNativeDriver: true }).start();
+                Animated.timing(mainImgOpacity, {
+                  toValue: 1,
+                  duration: 300,
+                  useNativeDriver: true,
+                }).start();
               }}
             />
           </View>
@@ -421,7 +430,11 @@ export default function ProductDetailScreen({ route, navigation }) {
                 onPress={() => {
                   mainImgOpacity.setValue(0);
                   setActiveImage(index);
-                  Animated.timing(mainImgOpacity, { toValue: 1, duration: 250, useNativeDriver: true }).start();
+                  Animated.timing(mainImgOpacity, {
+                    toValue: 1,
+                    duration: 250,
+                    useNativeDriver: true,
+                  }).start();
                 }}
               >
                 <Image source={{ uri: image }} style={styles.thumbImage} />
@@ -712,7 +725,9 @@ export default function ProductDetailScreen({ route, navigation }) {
                 color="#9ca3af"
               />
               <View style={styles.reviewEmptyCopy}>
-                <Text style={styles.reviewEmptyTitle}>Chưa có đánh giá nào</Text>
+                <Text style={styles.reviewEmptyTitle}>
+                  Chưa có đánh giá nào
+                </Text>
                 <Text style={styles.reviewEmptyText}>
                   Bạn có thể là người đầu tiên để lại cảm nhận cho sản phẩm này.
                 </Text>
@@ -759,9 +774,9 @@ export default function ProductDetailScreen({ route, navigation }) {
         <View style={styles.storyCard}>
           <Text style={styles.storyTitle}>Vì sao sản phẩm này dễ bán</Text>
           <Text style={styles.storyText}>
-            Dáng mặc an toàn, dễ phối với jeans, chân váy hoặc khoác thêm áo ngoài.
-            Nếu bạn đang demo ứng dụng, đây là kiểu nội dung giúp trang chi tiết bớt
-            trống và nhìn giống sản phẩm thật hơn.
+            Dáng mặc an toàn, dễ phối với jeans, chân váy hoặc khoác thêm áo
+            ngoài. Nếu bạn đang demo ứng dụng, đây là kiểu nội dung giúp trang
+            chi tiết bớt trống và nhìn giống sản phẩm thật hơn.
           </Text>
         </View>
       </Animated.View>
@@ -1151,4 +1166,3 @@ const styles = StyleSheet.create({
   },
   retryText: { color: "#fff", fontFamily: FONTS.bold },
 });
-

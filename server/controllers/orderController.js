@@ -202,12 +202,10 @@ const createOrder = async (req, res, next) => {
             buildVariantKey(item.productId, item.size, item.color)
           ] || 0;
         if (matchedVariant.stock < reservedQuantity) {
-          return res
-            .status(409)
-            .json({
-              success: false,
-              message: "Some selected variants are out of stock",
-            });
+          return res.status(409).json({
+            success: false,
+            message: "Some selected variants are out of stock",
+          });
         }
       } else if (
         product.stock <
@@ -258,7 +256,8 @@ const createOrder = async (req, res, next) => {
       return res.status(400).json({ success: false, message: voucherError });
     }
 
-    const shippingFee = itemsSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
+    const shippingFee =
+      itemsSubtotal >= FREE_SHIPPING_THRESHOLD ? 0 : SHIPPING_FEE;
     const totalAmount = itemsSubtotal - discountAmount + shippingFee;
 
     const normalizedPaymentNote =

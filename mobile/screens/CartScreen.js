@@ -16,7 +16,10 @@ import { useCart } from "../context/CartContext";
 import { FONTS } from "../constants/fonts";
 import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "../constants/shop";
 
-if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
+if (
+  Platform.OS === "android" &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
   UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
@@ -34,7 +37,11 @@ export default function CartScreen({ navigation }) {
   const freeShippingProgress = Math.min(1, subtotal / FREE_SHIPPING_THRESHOLD);
 
   useEffect(() => {
-    Animated.timing(revealAnim, { toValue: 1, duration: 280, useNativeDriver: true }).start();
+    Animated.timing(revealAnim, {
+      toValue: 1,
+      duration: 280,
+      useNativeDriver: true,
+    }).start();
   }, [revealAnim]);
 
   const animatedRemove = (index) => {
@@ -78,7 +85,9 @@ export default function CartScreen({ navigation }) {
         {freeShippingRemaining === 0 ? (
           <View style={styles.freeShipRow}>
             <Ionicons name="checkmark-circle" size={18} color="#16a34a" />
-            <Text style={styles.freeShipReached}>Bạn được miễn phí vận chuyển!</Text>
+            <Text style={styles.freeShipReached}>
+              Bạn được miễn phí vận chuyển!
+            </Text>
           </View>
         ) : (
           <>
@@ -94,7 +103,10 @@ export default function CartScreen({ navigation }) {
             </View>
             <View style={styles.progressTrack}>
               <View
-                style={[styles.progressFill, { width: `${freeShippingProgress * 100}%` }]}
+                style={[
+                  styles.progressFill,
+                  { width: `${freeShippingProgress * 100}%` },
+                ]}
               />
             </View>
           </>
@@ -104,7 +116,22 @@ export default function CartScreen({ navigation }) {
   );
 
   return (
-    <Animated.View style={[styles.container, { opacity: revealAnim, transform: [{ translateY: revealAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }] }]}>
+    <Animated.View
+      style={[
+        styles.container,
+        {
+          opacity: revealAnim,
+          transform: [
+            {
+              translateY: revealAnim.interpolate({
+                inputRange: [0, 1],
+                outputRange: [14, 0],
+              }),
+            },
+          ],
+        },
+      ]}
+    >
       <FlatList
         data={cartItems}
         keyExtractor={(_, idx) => String(idx)}
@@ -264,7 +291,12 @@ const styles = StyleSheet.create({
     borderColor: "#e2e8f0",
   },
   freeShipRow: { flexDirection: "row", alignItems: "center", gap: 8 },
-  freeShipText: { flex: 1, color: "#475569", fontFamily: FONTS.regular, fontSize: 13 },
+  freeShipText: {
+    flex: 1,
+    color: "#475569",
+    fontFamily: FONTS.regular,
+    fontSize: 13,
+  },
   freeShipHighlight: { color: "#4f46e5", fontFamily: FONTS.bold },
   freeShipReached: { color: "#16a34a", fontFamily: FONTS.bold, fontSize: 13 },
   progressTrack: {

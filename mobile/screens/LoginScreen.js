@@ -27,7 +27,8 @@ export default function LoginScreen({ navigation }) {
     const normalizedEmail = email.trim().toLowerCase();
     const newErrors = {};
     if (!normalizedEmail) newErrors.email = "Email không được để trống";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) newErrors.email = "Email không hợp lệ";
+    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail))
+      newErrors.email = "Email không hợp lệ";
     if (!password) newErrors.password = "Mật khẩu không được để trống";
 
     if (Object.values(newErrors).some(Boolean)) {
@@ -50,92 +51,126 @@ export default function LoginScreen({ navigation }) {
       style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-    <ScrollView
-      style={styles.container}
-      contentContainerStyle={styles.content}
-      keyboardShouldPersistTaps="handled"
-    >
-      <View style={styles.heroCard}>
-        <View style={styles.heroBadge}>
-          <Text style={styles.heroBadgeText}>Điểm nhấn mới</Text>
-        </View>
-        <Text style={styles.title}>Fashion Shop</Text>
-        <Text style={styles.subtitle}>
-          Đăng nhập để tiếp tục mua sắm, theo dõi đơn hàng và quản lý sản phẩm yêu thích theo phong cách riêng.
-        </Text>
-        <View style={styles.heroStats}>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>Mới</Text>
-            <Text style={styles.statLabel}>bộ sưu tập</Text>
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.heroCard}>
+          <View style={styles.heroBadge}>
+            <Text style={styles.heroBadgeText}>Điểm nhấn mới</Text>
           </View>
-          <View style={styles.statCard}>
-            <Text style={styles.statValue}>Nhanh</Text>
-            <Text style={styles.statLabel}>thanh toán</Text>
+          <Text style={styles.title}>Fashion Shop</Text>
+          <Text style={styles.subtitle}>
+            Đăng nhập để tiếp tục mua sắm, theo dõi đơn hàng và quản lý sản phẩm
+            yêu thích theo phong cách riêng.
+          </Text>
+          <View style={styles.heroStats}>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>Mới</Text>
+              <Text style={styles.statLabel}>bộ sưu tập</Text>
+            </View>
+            <View style={styles.statCard}>
+              <Text style={styles.statValue}>Nhanh</Text>
+              <Text style={styles.statLabel}>thanh toán</Text>
+            </View>
           </View>
-        </View>
-      </View>
-
-      <View style={styles.card}>
-        <View style={styles.fieldWrap}>
-          <Text style={styles.fieldLabel}>Email</Text>
-          <View style={[styles.inputShell, errors.email ? styles.inputShellError : null]}>
-            <Ionicons name="mail-outline" size={18} color={errors.email ? "#dc2626" : "#4f46e5"} />
-            <TextInput
-              style={styles.input}
-              placeholder="you@example.com"
-              placeholderTextColor="#9ca3af"
-              value={email}
-              onChangeText={(v) => { setEmail(v); setErrors((e) => ({ ...e, email: "" })); }}
-              autoCapitalize="none"
-              keyboardType="email-address"
-            />
-          </View>
-          {errors.email ? <Text style={styles.fieldError}>{errors.email}</Text> : null}
         </View>
 
-        <View style={styles.fieldWrap}>
-          <Text style={styles.fieldLabel}>Mật khẩu</Text>
-          <View style={[styles.inputShell, errors.password ? styles.inputShellError : null]}>
-            <Ionicons name="lock-closed-outline" size={18} color={errors.password ? "#dc2626" : "#4f46e5"} />
-            <TextInput
-              style={styles.input}
-              placeholder="Nhập mật khẩu"
-              placeholderTextColor="#9ca3af"
-              secureTextEntry={!showPassword}
-              value={password}
-              onChangeText={(v) => { setPassword(v); setErrors((e) => ({ ...e, password: "" })); }}
-            />
-            <Pressable onPress={() => setShowPassword((v) => !v)} hitSlop={8}>
+        <View style={styles.card}>
+          <View style={styles.fieldWrap}>
+            <Text style={styles.fieldLabel}>Email</Text>
+            <View
+              style={[
+                styles.inputShell,
+                errors.email ? styles.inputShellError : null,
+              ]}
+            >
               <Ionicons
-                name={showPassword ? "eye-off-outline" : "eye-outline"}
+                name="mail-outline"
                 size={18}
-                color="#94a3b8"
+                color={errors.email ? "#dc2626" : "#4f46e5"}
               />
-            </Pressable>
+              <TextInput
+                style={styles.input}
+                placeholder="you@example.com"
+                placeholderTextColor="#9ca3af"
+                value={email}
+                onChangeText={(v) => {
+                  setEmail(v);
+                  setErrors((e) => ({ ...e, email: "" }));
+                }}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+            </View>
+            {errors.email ? (
+              <Text style={styles.fieldError}>{errors.email}</Text>
+            ) : null}
           </View>
-          {errors.password ? <Text style={styles.fieldError}>{errors.password}</Text> : null}
+
+          <View style={styles.fieldWrap}>
+            <Text style={styles.fieldLabel}>Mật khẩu</Text>
+            <View
+              style={[
+                styles.inputShell,
+                errors.password ? styles.inputShellError : null,
+              ]}
+            >
+              <Ionicons
+                name="lock-closed-outline"
+                size={18}
+                color={errors.password ? "#dc2626" : "#4f46e5"}
+              />
+              <TextInput
+                style={styles.input}
+                placeholder="Nhập mật khẩu"
+                placeholderTextColor="#9ca3af"
+                secureTextEntry={!showPassword}
+                value={password}
+                onChangeText={(v) => {
+                  setPassword(v);
+                  setErrors((e) => ({ ...e, password: "" }));
+                }}
+              />
+              <Pressable onPress={() => setShowPassword((v) => !v)} hitSlop={8}>
+                <Ionicons
+                  name={showPassword ? "eye-off-outline" : "eye-outline"}
+                  size={18}
+                  color="#94a3b8"
+                />
+              </Pressable>
+            </View>
+            {errors.password ? (
+              <Text style={styles.fieldError}>{errors.password}</Text>
+            ) : null}
+          </View>
+
+          <Pressable
+            style={[styles.primaryBtn, loading && styles.disabled]}
+            onPress={handleLogin}
+            disabled={loading}
+          >
+            {loading ? (
+              <ActivityIndicator color="#fff" />
+            ) : (
+              <>
+                <Text style={styles.primaryBtnText}>Đăng nhập</Text>
+                <Ionicons name="arrow-forward" size={16} color="#fff" />
+              </>
+            )}
+          </Pressable>
+
+          <Pressable
+            style={styles.linkWrap}
+            onPress={() => navigation.navigate("Register")}
+          >
+            <Text style={styles.link}>
+              Chưa có tài khoản? Tạo tài khoản mới
+            </Text>
+          </Pressable>
         </View>
-
-        <Pressable
-          style={[styles.primaryBtn, loading && styles.disabled]}
-          onPress={handleLogin}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color="#fff" />
-          ) : (
-            <>
-              <Text style={styles.primaryBtnText}>Đăng nhập</Text>
-              <Ionicons name="arrow-forward" size={16} color="#fff" />
-            </>
-          )}
-        </Pressable>
-
-        <Pressable style={styles.linkWrap} onPress={() => navigation.navigate("Register")}>
-          <Text style={styles.link}>Chưa có tài khoản? Tạo tài khoản mới</Text>
-        </Pressable>
-      </View>
-    </ScrollView>
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 }

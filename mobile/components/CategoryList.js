@@ -6,7 +6,7 @@ export default function CategoryList({ categories, selectedId, onSelect }) {
   return (
     <View>
       <View style={styles.headRow}>
-        <Text style={styles.title}>Danh mục theo mood</Text>
+        <Text style={styles.title}>Danh mục theo phong cách</Text>
         <Text style={styles.count}>{categories.length - 1} nhóm</Text>
       </View>
       <ScrollView

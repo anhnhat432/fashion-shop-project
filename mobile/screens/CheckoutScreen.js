@@ -17,6 +17,11 @@ import { FREE_SHIPPING_THRESHOLD, SHIPPING_FEE } from "../constants/shop";
 
 const onlyDigits = (value) => value.replace(/\D/g, "");
 
+const paymentMethodLabelMap = {
+  COD: "COD",
+  BANK_TRANSFER: "Chuyển khoản",
+};
+
 export default function CheckoutScreen({ navigation }) {
   const { cartItems, clearCart } = useCart();
   const [shippingAddress, setShippingAddress] = useState("");
@@ -73,7 +78,7 @@ export default function CheckoutScreen({ navigation }) {
 
   const applyVoucher = async () => {
     if (!voucherCode.trim()) {
-      return Alert.alert("Lỗi", "Vui lòng nhập mã voucher");
+      return Alert.alert("Lỗi", "Vui lòng nhập mã giảm giá");
     }
 
     setApplyingVoucher(true);
@@ -87,7 +92,7 @@ export default function CheckoutScreen({ navigation }) {
       setAppliedVoucher(null);
       Alert.alert(
         "Lỗi",
-        error.response?.data?.message || "Voucher không hợp lệ",
+        error.response?.data?.message || "Mã giảm giá không hợp lệ",
       );
     } finally {
       setApplyingVoucher(false);
@@ -159,7 +164,7 @@ export default function CheckoutScreen({ navigation }) {
         <View style={styles.heroCard}>
           <View style={styles.heroTop}>
             <View>
-              <Text style={styles.heroEyebrow}>Final step</Text>
+              <Text style={styles.heroEyebrow}>Bước cuối</Text>
               <Text style={styles.heroTitle}>Xác nhận đơn hàng của bạn.</Text>
             </View>
             <Ionicons name="card-outline" size={24} color="#a5b4fc" />
@@ -171,13 +176,13 @@ export default function CheckoutScreen({ navigation }) {
           <View style={styles.heroStats}>
             <View style={styles.heroStatCard}>
               <Text style={styles.heroStatValue}>{itemCount}</Text>
-              <Text style={styles.heroStatLabel}>Items</Text>
+              <Text style={styles.heroStatLabel}>Món hàng</Text>
             </View>
             <View style={styles.heroStatCard}>
               <Text style={styles.heroStatValue}>
                 {finalTotal.toLocaleString()} đ
               </Text>
-              <Text style={styles.heroStatLabel}>Final total</Text>
+              <Text style={styles.heroStatLabel}>Cần thanh toán</Text>
             </View>
           </View>
         </View>
@@ -239,7 +244,7 @@ export default function CheckoutScreen({ navigation }) {
             >
               <View style={styles.paymentMethodHead}>
                 <Ionicons name="business-outline" size={18} color="#4f46e5" />
-                <Text style={styles.paymentMethodTitle}>BANK_TRANSFER</Text>
+                <Text style={styles.paymentMethodTitle}>Chuyển khoản</Text>
               </View>
               <Text style={styles.paymentMethodMeta}>
                 Mô phỏng chuyển khoản trước khi xác nhận đơn
@@ -305,13 +310,13 @@ export default function CheckoutScreen({ navigation }) {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Voucher ưu đãi</Text>
+          <Text style={styles.sectionTitle}>Mã giảm giá</Text>
           <View style={styles.voucherRow}>
             <View style={[styles.inputShell, styles.voucherInputShell]}>
               <Ionicons name="pricetag-outline" size={18} color="#4f46e5" />
               <TextInput
                 style={styles.input}
-                placeholder="Nhập mã voucher"
+                placeholder="Nhập mã giảm giá"
                 placeholderTextColor="#9ca3af"
                 value={voucherCode}
                 onChangeText={setVoucherCode}
@@ -350,7 +355,7 @@ export default function CheckoutScreen({ navigation }) {
               <Text style={styles.orderPreviewText}>{itemCount} sản phẩm</Text>
             </View>
             <View style={styles.orderPreviewChip}>
-              <Text style={styles.orderPreviewText}>{paymentMethod}</Text>
+              <Text style={styles.orderPreviewText}>{paymentMethodLabelMap[paymentMethod] || paymentMethod}</Text>
             </View>
           </View>
           <View style={styles.summaryRow}>

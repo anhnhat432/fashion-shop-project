@@ -1,13 +1,14 @@
-# Fashion Shop Project (Full-stack)
+# Fashion Shop Project
 
-Project gồm 3 phần trong cùng repo:
-- `server/`: Node.js + Express + MongoDB REST API
-- `mobile/`: React Native (Expo) cho khách hàng
-- `admin/`: React web cho quản trị
+Fashion Shop Project là một hệ thống bán hàng thời trang full-stack gồm 3 phần trong cùng một repo:
 
-## 1) Cấu trúc thư mục
+- `server/`: backend Node.js + Express + MongoDB REST API
+- `mobile/`: ứng dụng React Native (Expo) cho khách hàng
+- `admin/`: web React cho quản trị viên
 
-```
+## 1. Cấu trúc thư mục
+
+```text
 fashion-shop-project/
   server/
     config models controllers routes middleware utils scripts
@@ -17,67 +18,80 @@ fashion-shop-project/
     src/pages src/components src/services src/routes src/context
 ```
 
-## 2) Yêu cầu môi trường
+## 2. Yêu cầu môi trường
 
 - Node.js 18+
 - MongoDB local hoặc MongoDB Atlas
-- Expo Go (nếu chạy mobile trên điện thoại)
+- Tài khoản Expo nếu cần build APK/AAB
 
-## 3) Chạy backend (`/server`)
+## 3. Chạy backend local
 
 ```bash
 cd server
-cp .env.example .env
 npm install
+cp .env.example .env
 npm run seed
 npm run dev
 ```
 
-Backend chạy mặc định ở `http://localhost:5000`.
+Backend local mặc định chạy ở:
 
-### Deploy backend lên Render
-
-Repo đã có sẵn blueprint [render.yaml](render.yaml) để deploy backend Express trong monorepo này.
-
-1. Push repo lên GitHub.
-2. Tạo MongoDB public, khuyến nghị MongoDB Atlas.
-3. Vào Render Dashboard -> `New +` -> `Blueprint` -> chọn repo này.
-4. Render sẽ đọc [render.yaml](render.yaml) và tạo web service `fashion-shop-api` từ thư mục `server`.
-5. Khi được hỏi biến môi trường, nhập:
-
-```bash
-MONGO_URI=<mongodb-atlas-connection-string>
+```text
+http://localhost:5000
 ```
 
-`JWT_SECRET` sẽ được Render tự sinh, còn `JWT_EXPIRES_IN` mặc định là `7d`.
+### Tài khoản admin seed sẵn
 
-Sau khi deploy xong, backend sẽ có URL dạng:
+- Email: `admin@fashion.com`
+- Password: `123456`
 
-```bash
-https://fashion-shop-api.onrender.com
+## 4. Deploy backend lên Render
+
+Repo đã có sẵn cấu hình Render trong [render.yaml](render.yaml).
+
+### Cách nhanh nhất
+
+1. Push repo lên GitHub.
+2. Tạo MongoDB Atlas và lấy `MONGO_URI`.
+3. Vào Render Dashboard -> `New +` -> `Blueprint`.
+4. Chọn repo này để Render đọc `render.yaml`.
+5. Nhập các biến môi trường cần thiết:
+
+```env
+MONGO_URI=<mongodb-atlas-connection-string>
+JWT_SECRET=<your-secret>
+JWT_EXPIRES_IN=7d
+NODE_VERSION=20
+```
+
+### Cấu hình Render hiện tại
+
+- Root directory: `server`
+- Build command: `npm install`
+- Start command: `npm start`
+- Health check path: `/api/health`
+
+### URL production hiện tại
+
+Backend production hiện đang chạy tại:
+
+```text
+https://fashion-shop-project-4pxx.onrender.com
 ```
 
 Health check:
 
-```bash
-https://fashion-shop-api.onrender.com/api/health
-```
-
-Để mobile dùng backend production, đặt:
-
-```bash
-EXPO_PUBLIC_API_BASE_URL=https://fashion-shop-api.onrender.com/api
+```text
+https://fashion-shop-project-4pxx.onrender.com/api/health
 ```
 
 Lưu ý:
-- Render không cung cấp MongoDB cho app Node/Mongoose này, nên `MONGO_URI` phải là MongoDB Atlas hoặc MongoDB public khác.
-- Nếu cần dữ liệu mẫu sau deploy, mở Render Shell hoặc chạy local với cùng `MONGO_URI` rồi thực hiện `npm run seed` trong thư mục `server`.
 
-### Tài khoản admin seed sẵn
-- Email: `admin@fashion.com`
-- Password: `123456`
+- Render không cung cấp MongoDB cho ứng dụng này, nên `MONGO_URI` phải là MongoDB Atlas hoặc MongoDB public khác.
+- Nếu MongoDB Atlas báo `Authentication failed`, hãy kiểm tra lại username/password của `Database Access`.
+- Nếu cần dữ liệu mẫu sau khi deploy, chạy local với cùng `MONGO_URI` rồi dùng `npm run seed` trong thư mục `server`.
 
-## 4) Chạy mobile app (`/mobile`)
+## 5. Chạy mobile app local
 
 ```bash
 cd mobile
@@ -85,52 +99,78 @@ npm install
 npm start
 ```
 
-> Sửa `mobile/constants/config.js` để trỏ về backend đúng môi trường:
-- Android emulator: `http://10.0.2.2:5000/api`
-- iOS simulator: `http://localhost:5000/api`
-- Điện thoại thật: `http://<LAN_IP_MAY_TINH>:5000/api`
+App sẽ tự suy luận API local theo môi trường chạy. Nếu cần ép API thủ công, có thể dùng:
 
-### Build APK / AAB cho Android
-
-Mobile đang dùng Expo, vì vậy nên build bằng EAS.
-
-1. Deploy backend ra URL public, ví dụ `https://fashion-shop-api.onrender.com/api`
-2. Vào `mobile/.env` và đặt:
-
-```bash
-EXPO_PUBLIC_API_BASE_URL=https://fashion-shop-api.onrender.com/api
+```env
+EXPO_PUBLIC_API_BASE_URL=http://localhost:5000/api
 ```
 
-3. Cập nhật `mobile/app.json`:
-  - `expo.android.package`: package id Android duy nhất của bạn
-  - `expo.extra.eas.projectId`: project id sau khi chạy `eas init`
-4. Đăng nhập Expo và khởi tạo EAS:
+## 6. Build APK / AAB cho Android
+
+Mobile đang dùng Expo EAS.
+
+### Cấu hình hiện tại
+
+- Android package: `com.fpt.mma301.fashionshop`
+- Expo owner: `anhnhat4321`
+- Profile `preview`: build APK
+- Profile `production`: build AAB
+- API production đang trỏ tới:
+
+```text
+https://fashion-shop-project-4pxx.onrender.com/api
+```
+
+Thông tin này đang nằm trong:
+
+- [mobile/app.json](mobile/app.json)
+- [mobile/eas.json](mobile/eas.json)
+
+### Đăng nhập và khởi tạo EAS
+
+Nếu máy đã có `eas-cli` global:
 
 ```bash
 cd mobile
-npm install
-npx eas login
-npx eas init
+eas login
+eas init
 ```
 
-5. Build APK để nộp hoặc upload APKPure:
+Nếu PowerShell trên Windows chặn `eas.ps1`, dùng:
+
+```powershell
+cd mobile
+eas.cmd login
+eas.cmd init
+```
+
+Nếu chưa cài `eas-cli`:
 
 ```bash
+npm install --global eas-cli
+```
+
+### Build APK để nộp hoặc upload APKPure
+
+```bash
+cd mobile
 npm run build:android:apk
 ```
 
-6. Build AAB để đưa lên Google Play:
+### Build AAB để đưa lên Google Play
 
 ```bash
+cd mobile
 npm run build:android:aab
 ```
 
 Lưu ý:
-- App build thật không dùng được `localhost` hoặc `10.0.2.2`, bắt buộc backend phải có URL public.
-- File `mobile/eas.json` đã có sẵn 2 profile: `preview` tạo APK và `production` tạo AAB.
-- Nếu Render cấp URL khác với `https://fashion-shop-api.onrender.com`, cập nhật lại `EXPO_PUBLIC_API_BASE_URL` trong `mobile/eas.json` và `mobile/.env`.
 
-## 5) Chạy admin web (`/admin`)
+- App build thật không dùng được `localhost` hoặc `10.0.2.2`.
+- Trước khi build, backend production phải hoạt động bình thường.
+- Nếu Render đổi URL, hãy cập nhật lại `EXPO_PUBLIC_API_BASE_URL` trong `mobile/eas.json`.
+
+## 7. Chạy admin web local
 
 ```bash
 cd admin
@@ -138,61 +178,76 @@ npm install
 npm run dev
 ```
 
-Admin web chạy mặc định ở `http://localhost:5173`.
+Admin web local mặc định chạy ở:
 
-Tùy chọn cấu hình API URL cho admin:
+```text
+http://localhost:5173
+```
 
-```bash
-# admin/.env
+Nếu cần cấu hình API riêng:
+
+```env
 VITE_API_BASE_URL=http://localhost:5000/api
 ```
 
-## 6) API chính
+## 8. API chính
 
-- Auth:
-  - `POST /api/auth/register`
-  - `POST /api/auth/login`
-  - `GET /api/auth/me`
-- Categories:
-  - `GET /api/categories`
-  - `POST /api/categories` (admin)
-  - `PUT /api/categories/:id` (admin)
-  - `DELETE /api/categories/:id` (admin)
-- Products:
-  - `GET /api/products?search=&categoryId=`
-  - `GET /api/products/:id`
-  - `POST /api/products` (admin)
-  - `PUT /api/products/:id` (admin)
-  - `DELETE /api/products/:id` (admin)
-- Orders:
-  - `POST /api/orders` (user)
-  - `GET /api/orders/my-orders` (user)
-  - `GET /api/orders` (admin)
-  - `PUT /api/orders/:id/status` (admin)
+### Auth
 
-## 7) Đồng bộ dữ liệu giữa 3 phần
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
 
-- JWT token: backend trả về ở login/register, mobile lưu AsyncStorage, admin lưu localStorage
-- Role: `user` và `admin`, route admin được bảo vệ
-- Product field thống nhất: `name, price, description, image, sizes, colors, stock, categoryId`
-- Order item field thống nhất: `productId, name, image, price, quantity, size, color`
-- Response format: `{ success, message?, data? }`
+### Categories
 
-## 8) Checklist chạy end-to-end nhanh
+- `GET /api/categories`
+- `POST /api/categories` (admin)
+- `PUT /api/categories/:id` (admin)
+- `DELETE /api/categories/:id` (admin)
 
-1. Chạy backend + seed data (`server`).
-2. Đăng nhập admin ở web admin bằng tài khoản seed để quản lý category/product/order.
-3. Đăng ký user mới từ mobile.
-4. Từ mobile: xem sản phẩm -> thêm giỏ -> checkout -> xem lịch sử đơn.
-5. Quay lại admin: vào trang Orders để cập nhật trạng thái đơn.
+### Products
 
-## 9) Những lỗi hay gặp & cách xử lý
+- `GET /api/products?search=&categoryId=`
+- `GET /api/products/:id`
+- `POST /api/products` (admin)
+- `PUT /api/products/:id` (admin)
+- `DELETE /api/products/:id` (admin)
 
-- **Mobile không gọi được API:** đổi `mobile/constants/config.js` sang đúng LAN IP/emulator URL.
-- **Admin login lỗi 401/403:** kiểm tra đã `npm run seed`, dùng đúng account admin seed.
-- **MongoDB connection failed:** kiểm tra `MONGO_URI` trong `server/.env`.
+### Orders
 
-## 10) Mức độ hoàn thiện
+- `POST /api/orders` (user)
+- `GET /api/orders/my-orders` (user)
+- `GET /api/orders` (admin)
+- `PUT /api/orders/:id/status` (admin)
 
-- Đã có auth JWT, phân quyền admin/user, CRUD sản phẩm/danh mục, tạo đơn/lịch sử đơn, quản lý đơn trên admin.
-- UI giữ đơn giản, ưu tiên dễ chạy, dễ demo, dễ sửa.
+### Vouchers
+
+- `GET /api/vouchers`
+- `POST /api/vouchers` (admin)
+- `PUT /api/vouchers/:id` (admin)
+- `PATCH /api/vouchers/:id/toggle` (admin)
+
+## 9. Checklist demo nhanh
+
+1. Mở `https://fashion-shop-project-4pxx.onrender.com/api/health` để xác nhận backend live.
+2. Mở Expo build page để xác nhận APK đã build thành công.
+3. Mở GitHub Release của APK để xác nhận artifact đã được phát hành.
+4. Demo mobile: đăng nhập -> xem sản phẩm -> thêm giỏ -> checkout -> xem lịch sử đơn.
+5. Demo admin: đăng nhập -> vào Orders -> cập nhật trạng thái đơn hàng.
+
+## 10. Một số lỗi thường gặp
+
+- Mobile không gọi được API production:
+  - kiểm tra `EXPO_PUBLIC_API_BASE_URL` trong `mobile/eas.json`
+- Render deploy fail do không tìm thấy `package.json`:
+  - kiểm tra Render đang dùng root directory `server`
+- MongoDB Atlas báo `bad auth`:
+  - kiểm tra lại `Database Access`, password, và `MONGO_URI`
+- PowerShell báo chặn `eas.ps1`:
+  - dùng `eas.cmd` thay cho `eas`
+
+## 11. Tài liệu bổ sung
+
+- [docs/manual-test-checklist.md](docs/manual-test-checklist.md)
+- [docs/mobile-release-checklist.md](docs/mobile-release-checklist.md)
+- [docs/project-review-tonight.md](docs/project-review-tonight.md)

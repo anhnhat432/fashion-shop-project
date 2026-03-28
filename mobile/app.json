@@ -4,12 +4,22 @@
     "slug": "fashion-shop-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "platforms": ["ios", "android"],
-    "plugins": ["expo-font"],
+    "platforms": [
+      "ios",
+      "android"
+    ],
+    "plugins": [
+      "expo-font"
+    ],
     "android": {
       "package": "com.fpt.mma301.fashionshop",
       "versionCode": 1
     },
-    "extra": {}
+    "extra": {
+      "eas": {
+        "projectId": "4ddd0ef6-3d0b-47ae-ac38-e006f225952e"
+      }
+    },
+    "owner": "anhnhat4321"
   }
 }

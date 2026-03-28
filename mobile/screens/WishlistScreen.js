@@ -42,16 +42,16 @@ export default function WishlistScreen({ navigation }) {
   }, [activeFilter, wishlistItems]);
   const emptyLabel =
     activeFilter === "SALE"
-      ? "Chưa có sản phẩm sale trong wishlist"
+      ? "Chưa có sản phẩm ưu đãi trong danh sách yêu thích"
       : activeFilter === "LOW_STOCK"
-        ? "Chưa có sản phẩm sắp hết hàng trong wishlist"
+        ? "Chưa có sản phẩm sắp hết hàng trong danh sách yêu thích"
         : "Chưa có sản phẩm yêu thích";
   const activeFilterShortLabel =
     activeFilter === "SALE"
-      ? "Sale"
+      ? "Ưu đãi"
       : activeFilter === "LOW_STOCK"
-        ? "Low stock"
-        : "All";
+        ? "Sắp hết"
+        : "Tất cả";
 
   return (
     <View style={styles.container}>
@@ -65,13 +65,13 @@ export default function WishlistScreen({ navigation }) {
           <>
             <View style={styles.heroCard}>
               <View style={styles.heroTopRow}>
-                <Text style={styles.eyebrow}>Saved picks</Text>
+                <Text style={styles.eyebrow}>Đã lưu</Text>
                 <View style={styles.activeFilterBadge}>
-                  <Text style={styles.activeFilterBadgeEyebrow}>Filter</Text>
+                  <Text style={styles.activeFilterBadgeEyebrow}>Bộ lọc</Text>
                   <Text style={styles.activeFilterBadgeText}>{activeFilterShortLabel}</Text>
                 </View>
               </View>
-              <Text style={styles.title}>Wishlist của bạn</Text>
+              <Text style={styles.title}>Sản phẩm yêu thích của bạn</Text>
               <Text style={styles.subtitle}>
                 Lưu lại những món bạn muốn cân nhắc trước khi thêm vào giỏ.
               </Text>
@@ -84,7 +84,7 @@ export default function WishlistScreen({ navigation }) {
                   <Text style={styles.metricValueDark}>
                     {insight.saleCount}
                   </Text>
-                  <Text style={styles.metricLabelDark}>Đang có giá sale</Text>
+                  <Text style={styles.metricLabelDark}>Đang ưu đãi</Text>
                 </View>
                 <View style={styles.metricCardLight}>
                   <Text style={styles.metricValueDark}>
@@ -98,14 +98,14 @@ export default function WishlistScreen({ navigation }) {
             {loading ? (
               <View style={styles.loadingRow}>
                 <ActivityIndicator size="small" color="#4f46e5" />
-                <Text style={styles.loadingText}>Đang đồng bộ wishlist...</Text>
+                <Text style={styles.loadingText}>Đang đồng bộ danh sách yêu thích...</Text>
               </View>
             ) : null}
 
             <View style={styles.filterRow}>
               {[
                 { key: "ALL", label: `Tất cả (${wishlistCount})` },
-                { key: "SALE", label: `Đang sale (${insight.saleCount})` },
+                { key: "SALE", label: `Đang ưu đãi (${insight.saleCount})` },
                 {
                   key: "LOW_STOCK",
                   label: `Sắp hết (${insight.lowStockCount})`,
@@ -141,8 +141,8 @@ export default function WishlistScreen({ navigation }) {
             <Text style={styles.emptyTitle}>{emptyLabel}</Text>
             <Text style={styles.emptyText}>
               {activeFilter === "ALL"
-                ? "Nhấn tim ở sản phẩm để lưu nhanh vào wishlist."
-                : "Thử chuyển bộ lọc khác hoặc thêm sản phẩm phù hợp vào wishlist."}
+                ? "Nhấn tim ở sản phẩm để lưu nhanh vào danh sách yêu thích."
+                : "Thử chuyển bộ lọc khác hoặc thêm sản phẩm phù hợp vào danh sách yêu thích."}
             </Text>
             <Pressable
               style={styles.browseBtn}

@@ -51,10 +51,10 @@ export default function CartScreen({ navigation }) {
     <View style={styles.headerWrap}>
       <View style={styles.heroCard}>
         <View style={styles.heroBadge}>
-          <Text style={styles.heroBadgeText}>Bag overview</Text>
+          <Text style={styles.heroBadgeText}>Tóm tắt giỏ hàng</Text>
         </View>
         <Text style={styles.heroTitle}>
-          Giỏ đồ của bạn đã sẵn sàng để checkout.
+          Giỏ hàng của bạn đã sẵn sàng để thanh toán.
         </Text>
         <Text style={styles.heroSubtitle}>
           Kiểm tra số lượng, phối màu và tổng đơn trước khi xác nhận thanh toán.
@@ -116,7 +116,7 @@ export default function CartScreen({ navigation }) {
             <Ionicons name="bag-handle-outline" size={34} color="#9ca3af" />
             <Text style={styles.emptyTitle}>Giỏ hàng đang trống</Text>
             <Text style={styles.emptyText}>
-              Thêm vài item nổi bật để bắt đầu đơn hàng mới.
+              Thêm vài sản phẩm nổi bật để bắt đầu đơn hàng mới.
             </Text>
             <Pressable
               style={styles.browseBtn}
@@ -135,7 +135,7 @@ export default function CartScreen({ navigation }) {
             <View style={styles.itemContent}>
               <Text style={styles.name}>{item.name}</Text>
               <Text style={styles.meta}>
-                {item.size || "One size"} • {item.color || "Neutral"}
+                {item.size || "Một cỡ"} • {item.color || "Trung tính"}
               </Text>
               <Text style={styles.lineTotal}>
                 {Number(item.price).toLocaleString()} đ x {item.quantity}

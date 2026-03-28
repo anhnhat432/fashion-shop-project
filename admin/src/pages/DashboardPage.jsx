@@ -4,6 +4,14 @@ import api from '../services/api';
 
 const statusOrder = ['PENDING', 'CONFIRMED', 'SHIPPING', 'DELIVERED', 'CANCELLED'];
 
+const statusLabelMap = {
+  PENDING: 'Chờ xác nhận',
+  CONFIRMED: 'Đã xác nhận',
+  SHIPPING: 'Đang giao',
+  DELIVERED: 'Đã giao',
+  CANCELLED: 'Đã hủy',
+};
+
 const currency = (value) => `${Number(value || 0).toLocaleString()} đ`;
 
 export default function DashboardPage() {
@@ -99,7 +107,7 @@ export default function DashboardPage() {
 
   return (
     <Layout>
-      <h1>Fashion Shop Dashboard</h1>
+      <h1>Tổng quan Fashion Shop</h1>
       <p className="helper">Tổng quan nhanh để demo và quản lý dữ liệu.</p>
 
       {loading ? <p className="page-card">Đang tải thống kê...</p> : null}
@@ -109,10 +117,10 @@ export default function DashboardPage() {
         <>
           <section className="dashboard-hero">
             <div>
-              <p className="dashboard-kicker">Operations overview</p>
+              <p className="dashboard-kicker">Toàn cảnh vận hành</p>
               <h2 className="dashboard-title">Theo dõi đơn hàng, tồn kho và doanh thu trong một màn hình.</h2>
               <p className="dashboard-copy">
-                Dashboard này gom các số liệu quan trọng nhất để khi demo nhìn vào là thấy hệ thống đang sống,
+                Bảng tổng quan này gom các số liệu quan trọng nhất để khi demo nhìn vào là thấy hệ thống đang sống,
                 không chỉ là vài trang CRUD rời rạc.
               </p>
             </div>
@@ -125,22 +133,22 @@ export default function DashboardPage() {
 
           <div className="stats-grid stats-grid-4">
             <div className="stat-card accent-dark">
-              <p className="stat-label">Products</p>
+              <p className="stat-label">Sản phẩm</p>
               <p className="stat-value">{summary.productsCount}</p>
-              <p className="stat-footnote">Tổng stock: {summary.totalStock}</p>
+              <p className="stat-footnote">Tổng tồn kho: {summary.totalStock}</p>
             </div>
             <div className="stat-card accent-warm">
-              <p className="stat-label">Categories</p>
+              <p className="stat-label">Danh mục</p>
               <p className="stat-value">{summary.categoriesCount}</p>
               <p className="stat-footnote">Tổ chức catalog rõ ràng</p>
             </div>
             <div className="stat-card accent-soft">
-              <p className="stat-label">Orders</p>
+              <p className="stat-label">Đơn hàng</p>
               <p className="stat-value">{summary.ordersCount}</p>
               <p className="stat-footnote">Tỷ lệ giao thành công: {summary.deliveryRate}%</p>
             </div>
             <div className="stat-card accent-alert">
-              <p className="stat-label">Risk</p>
+              <p className="stat-label">Cảnh báo</p>
               <p className="stat-value">{summary.lowStockProducts.length + summary.soldOutProducts.length}</p>
               <p className="stat-footnote">Sắp hết hoặc đã hết hàng</p>
             </div>
@@ -161,7 +169,7 @@ export default function DashboardPage() {
                   return (
                     <div className="status-row" key={item.status}>
                       <div className="status-row-head">
-                        <span className={`status-badge ${`status-${item.status.toLowerCase()}`}`}>{item.status}</span>
+                        <span className={`status-badge ${`status-${item.status.toLowerCase()}`}`}>{statusLabelMap[item.status] || item.status}</span>
                         <strong>{item.count}</strong>
                       </div>
                       <div className="status-bar-track">
@@ -176,7 +184,7 @@ export default function DashboardPage() {
             <div className="page-card analytics-card">
               <div className="section-head">
                 <h3>Cảnh báo tồn kho</h3>
-                <p className="helper">Ưu tiên nhập thêm các item này.</p>
+                <p className="helper">Ưu tiên nhập thêm các sản phẩm này.</p>
               </div>
               {summary.lowStockProducts.length || summary.soldOutProducts.length ? (
                 <div className="inventory-list">
@@ -227,7 +235,7 @@ export default function DashboardPage() {
 
             <div className="page-card analytics-card">
               <div className="section-head">
-                <h3>Recent orders</h3>
+                <h3>Đơn gần đây</h3>
                 <p className="helper">5 đơn gần nhất để theo dõi nhanh.</p>
               </div>
               <div className="recent-orders-list">
@@ -239,7 +247,7 @@ export default function DashboardPage() {
                         {new Date(order.createdAt).toLocaleDateString('vi-VN')} • {currency(order.totalAmount)}
                       </p>
                     </div>
-                    <span className={`status-badge ${`status-${order.status.toLowerCase()}`}`}>{order.status}</span>
+                    <span className={`status-badge ${`status-${order.status.toLowerCase()}`}`}>{statusLabelMap[order.status] || order.status}</span>
                   </div>
                 ))}
               </div>
@@ -254,7 +262,7 @@ export default function DashboardPage() {
               <div className="best-seller-grid">
                 {summary.bestSellingIndicator.map((item) => (
                   <div className="best-seller-tile" key={item._id}>
-                    <p className="best-seller-category">{item.categoryId?.name || 'Fashion'}</p>
+                    <p className="best-seller-category">{item.categoryId?.name || 'Thời trang'}</p>
                     <h4>{item.name}</h4>
                     <p className="best-seller-price">{currency(item.price)}</p>
                     <p className="best-seller-stock">Đã bán: {item.salesCount} • Tồn: {item.stock}</p>

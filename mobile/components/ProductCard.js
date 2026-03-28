@@ -51,7 +51,7 @@ export default function ProductCard({ product, onPress }) {
           <View style={styles.badgeClusterLeft}>
             <View style={styles.badgePrimary}>
               <Text style={styles.badgePrimaryText}>
-                {isOnSale ? "Deal đang chạy" : "New Drop"}
+                {isOnSale ? "Đang ưu đãi" : "Mới lên kệ"}
               </Text>
             </View>
             {isLiked ? (
@@ -98,7 +98,7 @@ export default function ProductCard({ product, onPress }) {
               size={12}
               color="#4f46e5"
             />
-            <Text style={styles.imageFooterText}>{reviewCount} review</Text>
+            <Text style={styles.imageFooterText}>{reviewCount} đánh giá</Text>
           </View>
           {isOnSale ? (
             <View style={styles.imageFooterChipWarm}>
@@ -111,7 +111,7 @@ export default function ProductCard({ product, onPress }) {
       <View style={styles.content}>
         <View style={styles.headerRow}>
           <Text style={styles.category} numberOfLines={1}>
-            {product.categoryId?.name || "Fashion"}
+            {product.categoryId?.name || "Thời trang"}
           </Text>
           <Text style={styles.stock}>Kho: {Number(product.stock || 0)}</Text>
         </View>
@@ -119,7 +119,7 @@ export default function ProductCard({ product, onPress }) {
           {product.name}
         </Text>
         <Text style={styles.price}>
-          {Number(product.salePrice || product.price || 0).toLocaleString()} d
+          {Number(product.salePrice || product.price || 0).toLocaleString()} đ
         </Text>
         {product.salePrice ? (
           <Text style={styles.oldPrice}>

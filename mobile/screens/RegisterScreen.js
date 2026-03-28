@@ -94,10 +94,10 @@ export default function RegisterScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.heroCard}>
-        <Text style={styles.heroEyebrow}>Join the edit</Text>
+        <Text style={styles.heroEyebrow}>Tham gia ngay</Text>
         <Text style={styles.title}>Tạo tài khoản mới</Text>
         <Text style={styles.subtitle}>
-          Lưu thông tin mua sắm, theo dõi đơn hàng và checkout nhanh hơn cho những lần sau.
+          Lưu thông tin mua sắm, theo dõi đơn hàng và thanh toán nhanh hơn cho những lần sau.
         </Text>
       </View>
 

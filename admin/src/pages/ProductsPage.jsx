@@ -96,7 +96,7 @@ export default function ProductsPage() {
       return;
     }
     if (payload.salePrice !== null && (Number.isNaN(payload.salePrice) || payload.salePrice <= 0 || payload.salePrice >= payload.price)) {
-      setError('Giá sale phải > 0 và nhỏ hơn giá gốc');
+      setError('Giá khuyến mãi phải > 0 và nhỏ hơn giá gốc');
       return;
     }
     if (Number.isNaN(payload.stock) || payload.stock < 0) {
@@ -165,7 +165,7 @@ export default function ProductsPage() {
 
   return (
     <Layout>
-      <h1>Products</h1>
+      <h1>Sản phẩm</h1>
       <p className="helper">Quản lý sản phẩm nhanh cho demo môn học.</p>
 
       <section className="form-card">
@@ -177,11 +177,11 @@ export default function ProductsPage() {
         <div className="grid-form">
           <input placeholder="Tên" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} />
           <input placeholder="Giá" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} />
-          <input placeholder="Giá sale" value={form.salePrice} onChange={(e) => setForm({ ...form, salePrice: e.target.value })} />
+          <input placeholder="Giá khuyến mãi" value={form.salePrice} onChange={(e) => setForm({ ...form, salePrice: e.target.value })} />
           <input placeholder="Mô tả" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
-          <input placeholder="Image URL" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} />
-          <input placeholder="Sizes (S,M,L)" value={form.sizes} onChange={(e) => setForm({ ...form, sizes: e.target.value })} />
-          <input placeholder="Colors (Đỏ,Xanh)" value={form.colors} onChange={(e) => setForm({ ...form, colors: e.target.value })} />
+          <input placeholder="Ảnh (URL)" value={form.image} onChange={(e) => setForm({ ...form, image: e.target.value })} />
+          <input placeholder="Kích cỡ (S, M, L)" value={form.sizes} onChange={(e) => setForm({ ...form, sizes: e.target.value })} />
+          <input placeholder="Màu sắc (Đỏ, Xanh)" value={form.colors} onChange={(e) => setForm({ ...form, colors: e.target.value })} />
           <input placeholder="Tồn kho" value={form.stock} onChange={(e) => setForm({ ...form, stock: e.target.value })} />
           <select value={form.categoryId} onChange={(e) => setForm({ ...form, categoryId: e.target.value })}>
             <option value="">-- Chọn danh mục --</option>

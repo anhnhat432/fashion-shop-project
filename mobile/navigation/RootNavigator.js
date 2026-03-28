@@ -86,7 +86,7 @@ export default function RootNavigator() {
           <Stack.Screen
             name="Wishlist"
             component={WishlistScreen}
-            options={{ title: "Wishlist" }}
+            options={{ title: "Sản phẩm yêu thích" }}
           />
           <Stack.Screen
             name="ChangePassword"

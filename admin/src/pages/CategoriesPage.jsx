@@ -64,8 +64,8 @@ export default function CategoriesPage() {
 
   return (
     <Layout>
-      <h1>Categories</h1>
-      <p className="helper">Danh mục nên ngắn gọn, dễ lọc sản phẩm.</p>
+      <h1>Danh mục</h1>
+      <p className="helper">Danh mục nên ngắn gọn để lọc sản phẩm dễ hơn.</p>
 
       <section className="form-card category-form-card">
         <div className="form-card-head">
@@ -79,8 +79,20 @@ export default function CategoriesPage() {
             onChange={(e) => setName(e.target.value)}
             placeholder="Tên danh mục"
           />
-          <button className="btn-primary" onClick={saveCategory}>{editingId ? 'Cập nhật' : 'Thêm'}</button>
-          {editingId ? <button className="btn-ghost" onClick={() => { setEditingId(null); setName(''); }}>Hủy</button> : null}
+          <button className="btn-primary" onClick={saveCategory}>
+            {editingId ? 'Cập nhật' : 'Thêm'}
+          </button>
+          {editingId ? (
+            <button
+              className="btn-ghost"
+              onClick={() => {
+                setEditingId(null);
+                setName('');
+              }}
+            >
+              Hủy
+            </button>
+          ) : null}
         </div>
       </section>
 
@@ -94,12 +106,16 @@ export default function CategoriesPage() {
           <h3 className="category-list-title">Danh sách danh mục</h3>
 
           <div className="category-list">
-            {categories.map((c) => (
-              <div key={c._id} className="category-row">
-                <span className="category-name">{c.name}</span>
+            {categories.map((category) => (
+              <div key={category._id} className="category-row">
+                <span className="category-name">{category.name}</span>
                 <div className="row-actions">
-                  <button className="btn-edit" onClick={() => startEdit(c)}>Sửa</button>
-                  <button className="btn-delete" onClick={() => removeCategory(c._id)}>Xóa</button>
+                  <button className="btn-edit" onClick={() => startEdit(category)}>
+                    Sửa
+                  </button>
+                  <button className="btn-delete" onClick={() => removeCategory(category._id)}>
+                    Xóa
+                  </button>
                 </div>
               </div>
             ))}

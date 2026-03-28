@@ -286,7 +286,7 @@ export default function ProductDetailScreen({ route, navigation }) {
     } catch (wishlistError) {
       Alert.alert(
         "Lỗi",
-        wishlistError.response?.data?.message || "Không thể cập nhật wishlist",
+        wishlistError.response?.data?.message || "Không thể cập nhật danh sách yêu thích",
       );
     }
   };
@@ -377,7 +377,7 @@ export default function ProductDetailScreen({ route, navigation }) {
           </View>
           <View style={styles.imageBadgeRow}>
             <View style={styles.editorBadge}>
-              <Text style={styles.editorBadgeText}>Editor pick</Text>
+              <Text style={styles.editorBadgeText}>Gợi ý nổi bật</Text>
             </View>
             <View style={styles.imageActions}>
               <Pressable
@@ -398,11 +398,11 @@ export default function ProductDetailScreen({ route, navigation }) {
           <View style={styles.quickInfoStrip}>
             <View style={styles.quickInfoChip}>
               <Ionicons name="sparkles-outline" size={14} color="#4f46e5" />
-              <Text style={styles.quickInfoText}>Minimal fit</Text>
+              <Text style={styles.quickInfoText}>Dáng tối giản</Text>
             </View>
             <View style={styles.quickInfoChip}>
               <Ionicons name="flash-outline" size={14} color="#4f46e5" />
-              <Text style={styles.quickInfoText}>Best seller style</Text>
+              <Text style={styles.quickInfoText}>Mẫu bán chạy</Text>
             </View>
           </View>
         </View>
@@ -433,7 +433,7 @@ export default function ProductDetailScreen({ route, navigation }) {
         <View style={styles.card}>
           <View style={styles.metaTopRow}>
             <Text style={styles.categoryText}>
-              {product.categoryId?.name || "Fashion essentials"}
+              {product.categoryId?.name || "Thời trang cơ bản"}
             </Text>
             <Text style={styles.ratingText}>
               ★ {averageRating.toFixed(1)} từ {reviewCount} đánh giá
@@ -452,7 +452,7 @@ export default function ProductDetailScreen({ route, navigation }) {
 
           <View style={styles.selectionSummary}>
             <View style={styles.selectionPill}>
-              <Text style={styles.selectionLabel}>Size</Text>
+              <Text style={styles.selectionLabel}>Kích cỡ</Text>
               <Text style={styles.selectionValue}>{size}</Text>
             </View>
             <View style={styles.selectionPill}>
@@ -469,7 +469,7 @@ export default function ProductDetailScreen({ route, navigation }) {
 
           <View style={styles.highlightGrid}>
             <View style={styles.highlightCard}>
-              <Text style={styles.highlightValue}>Free ship</Text>
+              <Text style={styles.highlightValue}>Miễn phí giao hàng</Text>
               <Text style={styles.highlightLabel}>Đơn từ 499.000 đ</Text>
             </View>
             <View style={styles.highlightCard}>
@@ -479,7 +479,7 @@ export default function ProductDetailScreen({ route, navigation }) {
               </Text>
             </View>
             <View style={styles.highlightCard}>
-              <Text style={styles.highlightValue}>Mix dễ</Text>
+              <Text style={styles.highlightValue}>Dễ phối</Text>
               <Text style={styles.highlightLabel}>
                 Hợp đồ đi học và đi chơi
               </Text>
@@ -634,7 +634,7 @@ export default function ProductDetailScreen({ route, navigation }) {
                 Viết đánh giá của bạn
               </Text>
               <Text style={styles.reviewComposerText}>
-                Mô tả nhanh cảm giác mặc, form hoặc chất liệu để người sau dễ
+                Mô tả nhanh cảm giác mặc, dáng áo hoặc chất liệu để người sau dễ
                 quyết định hơn.
               </Text>
             </View>
@@ -712,7 +712,7 @@ export default function ProductDetailScreen({ route, navigation }) {
                 color="#9ca3af"
               />
               <View style={styles.reviewEmptyCopy}>
-                <Text style={styles.reviewEmptyTitle}>Chưa có review nào</Text>
+                <Text style={styles.reviewEmptyTitle}>Chưa có đánh giá nào</Text>
                 <Text style={styles.reviewEmptyText}>
                   Bạn có thể là người đầu tiên để lại cảm nhận cho sản phẩm này.
                 </Text>
@@ -757,10 +757,10 @@ export default function ProductDetailScreen({ route, navigation }) {
         ) : null}
 
         <View style={styles.storyCard}>
-          <Text style={styles.storyTitle}>Vì sao item này dễ bán</Text>
+          <Text style={styles.storyTitle}>Vì sao sản phẩm này dễ bán</Text>
           <Text style={styles.storyText}>
-            Form an toàn, phối nhanh với jeans, chân váy hoặc layer áo khoác.
-            Nếu bạn đang demo app, đây là kiểu nội dung giúp trang chi tiết bớt
+            Dáng mặc an toàn, dễ phối với jeans, chân váy hoặc khoác thêm áo ngoài.
+            Nếu bạn đang demo ứng dụng, đây là kiểu nội dung giúp trang chi tiết bớt
             trống và nhìn giống sản phẩm thật hơn.
           </Text>
         </View>

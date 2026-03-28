@@ -4,7 +4,12 @@ import api from '../services/api';
 
 const roleClassMap = {
   admin: 'status-confirmed',
-  user: 'status-pending'
+  user: 'status-pending',
+};
+
+const roleLabelMap = {
+  admin: 'Quản trị viên',
+  user: 'Người dùng',
 };
 
 export default function UsersPage() {
@@ -37,7 +42,7 @@ export default function UsersPage() {
       await api.put(`/users/${id}/role`, { role });
       fetchUsers();
     } catch (err) {
-      setError(err.response?.data?.message || 'Không cập nhật được role');
+      setError(err.response?.data?.message || 'Không cập nhật được quyền');
     } finally {
       setUpdatingId('');
     }
@@ -45,8 +50,8 @@ export default function UsersPage() {
 
   return (
     <Layout>
-      <h1>Users</h1>
-      <p className="helper">Xem danh sách người dùng và phân quyền admin.</p>
+      <h1>Người dùng</h1>
+      <p className="helper">Xem danh sách người dùng và phân quyền quản trị.</p>
 
       {loading ? <p className="page-card">Đang tải người dùng...</p> : null}
       {error ? <p className="error">{error}</p> : null}
@@ -62,34 +67,34 @@ export default function UsersPage() {
                 <th>Email</th>
                 <th>Số điện thoại</th>
                 <th>Địa chỉ</th>
-                <th>Role</th>
+                <th>Quyền</th>
                 <th>Ngày tạo</th>
                 <th>Phân quyền</th>
               </tr>
             </thead>
             <tbody>
-              {users.map((u, idx) => (
-                <tr key={u._id}>
+              {users.map((user, idx) => (
+                <tr key={user._id}>
                   <td>{idx + 1}</td>
-                  <td>{u.name}</td>
-                  <td>{u.email}</td>
-                  <td>{u.phone || '—'}</td>
-                  <td>{u.address || '—'}</td>
+                  <td>{user.name}</td>
+                  <td>{user.email}</td>
+                  <td>{user.phone || '—'}</td>
+                  <td>{user.address || '—'}</td>
                   <td>
-                    <span className={`status-badge ${roleClassMap[u.role] || ''}`}>
-                      {u.role}
+                    <span className={`status-badge ${roleClassMap[user.role] || ''}`}>
+                      {roleLabelMap[user.role] || user.role}
                     </span>
                   </td>
-                  <td>{new Date(u.createdAt).toLocaleDateString('vi-VN')}</td>
+                  <td>{new Date(user.createdAt).toLocaleDateString('vi-VN')}</td>
                   <td>
                     <select
                       className="order-status-select"
-                      value={u.role}
-                      onChange={(e) => handleRoleChange(u._id, e.target.value)}
-                      disabled={updatingId === u._id}
+                      value={user.role}
+                      onChange={(e) => handleRoleChange(user._id, e.target.value)}
+                      disabled={updatingId === user._id}
                     >
-                      <option value="user">user</option>
-                      <option value="admin">admin</option>
+                      <option value="user">Người dùng</option>
+                      <option value="admin">Quản trị viên</option>
                     </select>
                   </td>
                 </tr>

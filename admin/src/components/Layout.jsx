@@ -2,12 +2,12 @@ import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const menus = [
-  { to: '/', label: 'Dashboard', icon: '⎈' },
-  { to: '/products', label: 'Products', icon: '🛍' },
-  { to: '/categories', label: 'Categories', icon: '◈' },
-  { to: '/orders', label: 'Orders', icon: '📦' },
-  { to: '/vouchers', label: 'Vouchers', icon: '🎫' },
-  { to: '/users', label: 'Users', icon: '👤' }
+  { to: '/', label: 'Tổng quan', icon: '⎈' },
+  { to: '/products', label: 'Sản phẩm', icon: '🛍' },
+  { to: '/categories', label: 'Danh mục', icon: '◈' },
+  { to: '/orders', label: 'Đơn hàng', icon: '📦' },
+  { to: '/vouchers', label: 'Mã giảm giá', icon: '🎫' },
+  { to: '/users', label: 'Người dùng', icon: '👤' },
 ];
 
 export default function Layout({ children }) {
@@ -17,13 +17,18 @@ export default function Layout({ children }) {
     <div className="layout">
       <aside className="sidebar">
         <div className="sidebar-head">
-          <h2>Fashion Admin</h2>
-          <p className="helper">Quản lý nhanh cho demo môn học</p>
+          <h2>Quản trị Fashion Shop</h2>
+          <p className="helper">Quản lý nhanh cho buổi demo môn học</p>
         </div>
 
         <nav className="sidebar-nav">
           {menus.map((item) => (
-            <NavLink key={item.to} to={item.to} end={item.to === '/'} className={({ isActive }) => (isActive ? 'active' : '')}>
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === '/'}
+              className={({ isActive }) => (isActive ? 'active' : '')}
+            >
               <span className="menu-mark">{item.icon}</span>
               <span>{item.label}</span>
             </NavLink>

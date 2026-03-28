@@ -57,20 +57,20 @@ export default function LoginScreen({ navigation }) {
     >
       <View style={styles.heroCard}>
         <View style={styles.heroBadge}>
-          <Text style={styles.heroBadgeText}>Editorial drop</Text>
+          <Text style={styles.heroBadgeText}>Điểm nhấn mới</Text>
         </View>
-        <Text style={styles.title}>Fashion Shop Studio</Text>
+        <Text style={styles.title}>Fashion Shop</Text>
         <Text style={styles.subtitle}>
-          Đăng nhập để tiếp tục mua sắm, theo dõi đơn hàng và quản lý wishlist theo phong cách riêng.
+          Đăng nhập để tiếp tục mua sắm, theo dõi đơn hàng và quản lý sản phẩm yêu thích theo phong cách riêng.
         </Text>
         <View style={styles.heroStats}>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>New</Text>
-            <Text style={styles.statLabel}>collection</Text>
+            <Text style={styles.statValue}>Mới</Text>
+            <Text style={styles.statLabel}>bộ sưu tập</Text>
           </View>
           <View style={styles.statCard}>
-            <Text style={styles.statValue}>Fast</Text>
-            <Text style={styles.statLabel}>checkout</Text>
+            <Text style={styles.statValue}>Nhanh</Text>
+            <Text style={styles.statLabel}>thanh toán</Text>
           </View>
         </View>
       </View>

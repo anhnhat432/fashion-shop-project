@@ -20,6 +20,26 @@ const statusClassMap = {
   CANCELLED: 'status-cancelled'
 };
 
+const statusLabelMap = {
+  ALL: 'Tất cả',
+  PENDING: 'Chờ xác nhận',
+  CONFIRMED: 'Đã xác nhận',
+  SHIPPING: 'Đang giao',
+  DELIVERED: 'Đã giao',
+  CANCELLED: 'Đã hủy',
+};
+
+const paymentStatusLabelMap = {
+  ALL: 'Tất cả',
+  PENDING: 'Chờ thanh toán',
+  PAID: 'Đã thanh toán',
+};
+
+const paymentMethodLabelMap = {
+  COD: 'COD',
+  BANK_TRANSFER: 'Chuyển khoản',
+};
+
 export default function OrdersPage() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -93,9 +113,9 @@ export default function OrdersPage() {
       idx + 1,
       o.userId?.name || 'N/A',
       Number(o.totalAmount || 0),
-      o.paymentMethod || 'COD',
-      o.paymentStatus || 'PENDING',
-      o.status,
+      paymentMethodLabelMap[o.paymentMethod] || o.paymentMethod || 'COD',
+      paymentStatusLabelMap[o.paymentStatus || 'PENDING'] || (o.paymentStatus || 'PENDING'),
+      statusLabelMap[o.status] || o.status,
       new Date(o.createdAt).toLocaleDateString('vi-VN')
     ]);
 
@@ -116,7 +136,7 @@ export default function OrdersPage() {
 
   return (
     <Layout>
-      <h1>Orders</h1>
+      <h1>Đơn hàng</h1>
       <p className="helper">Cập nhật trạng thái đơn và trạng thái thanh toán ngay trên bảng.</p>
 
       {loading ? <p className="page-card">Đang tải đơn hàng...</p> : null}
@@ -136,7 +156,7 @@ export default function OrdersPage() {
               />
             </div>
             <div className="filter-group">
-              <span className="helper">Lọc TT đơn</span>
+              <span className="helper">Lọc trạng thái đơn</span>
               <select
                 className="order-status-select"
                 value={statusFilter}
@@ -144,7 +164,7 @@ export default function OrdersPage() {
               >
                 <option value="ALL">Tất cả</option>
                 {statuses.map((s) => (
-                  <option key={s} value={s}>{s}</option>
+                  <option key={s} value={s}>{statusLabelMap[s] || s}</option>
                 ))}
               </select>
             </div>
@@ -157,7 +177,7 @@ export default function OrdersPage() {
               >
                 {paymentStatuses.map((status) => (
                   <option key={status} value={status}>
-                    {status}
+                    {paymentStatusLabelMap[status] || status}
                   </option>
                 ))}
               </select>
@@ -170,7 +190,7 @@ export default function OrdersPage() {
           <div className="page-card table-wrap">
           <table className="orders-table">
             <thead>
-              <tr><th>Order ID</th><th>Khách hàng</th><th>Tổng tiền</th><th>Thanh toán</th><th>TT thanh toán</th><th>Cập nhật TT</th><th>Trạng thái</th><th>Cập nhật</th></tr>
+              <tr><th>Mã đơn</th><th>Khách hàng</th><th>Tổng tiền</th><th>Phương thức</th><th>Thanh toán</th><th>Cập nhật thanh toán</th><th>Trạng thái</th><th>Cập nhật đơn</th></tr>
             </thead>
             <tbody>
               {filteredOrders.map((o, idx) => (
@@ -178,10 +198,10 @@ export default function OrdersPage() {
                   <td className="order-id-cell">#{String(idx + 1).padStart(3, '0')}</td>
                   <td>{o.userId?.name || 'N/A'}</td>
                   <td className="order-total-cell">{Number(o.totalAmount || 0).toLocaleString()} đ</td>
-                  <td>{o.paymentMethod || 'COD'}</td>
+                  <td>{paymentMethodLabelMap[o.paymentMethod] || o.paymentMethod || 'COD'}</td>
                   <td>
                     <span className={`status-badge ${o.paymentStatus === 'PAID' ? 'payment-paid' : 'status-pending'}`}>
-                      {o.paymentStatus || 'PENDING'}
+                      {paymentStatusLabelMap[o.paymentStatus || 'PENDING'] || (o.paymentStatus || 'PENDING')}
                     </span>
                     {o.transferReference ? <div className="helper">{o.transferReference}</div> : null}
                   </td>
@@ -193,11 +213,11 @@ export default function OrdersPage() {
                       disabled={updatingPaymentId === o._id}
                     >
                       {paymentStatuses.filter((status) => status !== 'ALL').map((status) => (
-                        <option key={status} value={status}>{status}</option>
+                        <option key={status} value={status}>{paymentStatusLabelMap[status] || status}</option>
                       ))}
                     </select>
                   </td>
-                  <td><span className={`status-badge ${statusClassMap[o.status] || ''}`}>{o.status}</span></td>
+                  <td><span className={`status-badge ${statusClassMap[o.status] || ''}`}>{statusLabelMap[o.status] || o.status}</span></td>
                   <td>
                     <select
                       className="order-status-select"
@@ -205,7 +225,7 @@ export default function OrdersPage() {
                       onChange={(e) => updateStatus(o._id, e.target.value)}
                       disabled={updatingId === o._id}
                     >
-                      {getStatusOptions(o.status).map((s) => <option key={s} value={s}>{s}</option>)}
+                      {getStatusOptions(o.status).map((s) => <option key={s} value={s}>{statusLabelMap[s] || s}</option>)}
                     </select>
                   </td>
                 </tr>

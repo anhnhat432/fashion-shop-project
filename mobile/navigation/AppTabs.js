@@ -45,9 +45,7 @@ function CartBadge() {
         transform: [{ scale: scaleAnim }],
       }}
     >
-      <Text
-        style={{ color: "#fff", fontSize: 10, fontFamily: FONTS.bold }}
-      >
+      <Text style={{ color: "#fff", fontSize: 10, fontFamily: FONTS.bold }}>
         {cartCount > 9 ? "9+" : cartCount}
       </Text>
     </Animated.View>
@@ -91,7 +89,7 @@ export default function AppTabs() {
       })}
     >
       <Tab.Screen name="Home" component={HomeScreen} options={{ title: "Khám phá" }} />
-      <Tab.Screen name="Cart" component={CartScreen} options={{ title: "Giỏ đồ" }} />
+      <Tab.Screen name="Cart" component={CartScreen} options={{ title: "Giỏ hàng" }} />
       <Tab.Screen name="Profile" component={ProfileScreen} options={{ title: "Tài khoản" }} />
     </Tab.Navigator>
   );

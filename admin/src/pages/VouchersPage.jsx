@@ -14,16 +14,16 @@ const initialForm = {
 const formatCurrency = (value) => `${Number(value || 0).toLocaleString()} đ`;
 const HEAVY_USAGE_THRESHOLD = 3;
 const FILTER_OPTIONS = [
-  { key: 'ALL', label: 'All' },
-  { key: 'ACTIVE', label: 'Active' },
-  { key: 'ARCHIVED', label: 'Archived' },
+  { key: 'ALL', label: 'Tất cả' },
+  { key: 'ACTIVE', label: 'Đang dùng' },
+  { key: 'ARCHIVED', label: 'Đã lưu trữ' },
 ];
 const SECONDARY_FILTER_OPTIONS = [
-  { key: 'NONE', label: 'All types' },
-  { key: 'USED_MANY', label: 'Used many' },
-  { key: 'INACTIVE', label: 'Inactive' },
-  { key: 'PERCENT', label: 'Percent' },
-  { key: 'FIXED', label: 'Fixed' },
+  { key: 'NONE', label: 'Tất cả loại' },
+  { key: 'USED_MANY', label: 'Dùng nhiều' },
+  { key: 'INACTIVE', label: 'Đang tắt' },
+  { key: 'PERCENT', label: 'Giảm theo %' },
+  { key: 'FIXED', label: 'Giảm cố định' },
 ];
 
 export default function VouchersPage() {
@@ -53,7 +53,7 @@ export default function VouchersPage() {
       setVouchers(activeRes.data.data || []);
       setArchivedVouchers(archivedRes.data.data || []);
     } catch (err) {
-      setError(err.response?.data?.message || 'Không tải được danh sách voucher');
+      setError(err.response?.data?.message || 'Không tải được danh sách mã giảm giá');
     } finally {
       setLoading(false);
     }
@@ -129,15 +129,15 @@ export default function VouchersPage() {
     };
 
     if (payload.code.length < 3) {
-      setError('Mã voucher tối thiểu 3 ký tự');
+      setError('Mã giảm giá tối thiểu 3 ký tự');
       return;
     }
     if (!['PERCENT', 'FIXED'].includes(payload.type)) {
-      setError('Loại voucher không hợp lệ');
+      setError('Loại mã giảm giá không hợp lệ');
       return;
     }
     if (Number.isNaN(payload.value) || payload.value <= 0) {
-      setError('Giá trị voucher phải lớn hơn 0');
+      setError('Giá trị mã giảm giá phải lớn hơn 0');
       return;
     }
     if (Number.isNaN(payload.minOrderValue) || payload.minOrderValue < 0) {
@@ -149,7 +149,7 @@ export default function VouchersPage() {
       return;
     }
     if (payload.type === 'PERCENT' && payload.value > 100) {
-      setError('Voucher phần trăm không thể lớn hơn 100');
+      setError('Mã giảm theo phần trăm không thể lớn hơn 100');
       return;
     }
 
@@ -157,7 +157,7 @@ export default function VouchersPage() {
       editingVoucher?.usageCount >= HEAVY_USAGE_THRESHOLD &&
       editingVoucher.code !== payload.code &&
       !window.confirm(
-        `Voucher ${editingVoucher.code} đã được dùng ${editingVoucher.usageCount} lần. Đổi mã có thể làm lệch báo cáo và lịch sử đơn. Bạn vẫn muốn tiếp tục?`,
+        `Mã ${editingVoucher.code} đã được dùng ${editingVoucher.usageCount} lần. Đổi mã có thể làm lệch báo cáo và lịch sử đơn. Bạn vẫn muốn tiếp tục?`,
       )
     ) {
       return;
@@ -174,7 +174,7 @@ export default function VouchersPage() {
       resetForm();
       fetchVouchers();
     } catch (err) {
-      setError(err.response?.data?.message || 'Không lưu được voucher');
+      setError(err.response?.data?.message || 'Không lưu được mã giảm giá');
     } finally {
       setSaving(false);
     }
@@ -196,10 +196,10 @@ export default function VouchersPage() {
   const removeVoucher = async (id) => {
     const voucher = vouchers.find((item) => item._id === id);
     const confirmMessage = voucher?.usageCount >= HEAVY_USAGE_THRESHOLD
-      ? `Voucher ${voucher.code} đã được dùng nhiều (${voucher.usageCount} lần). Hệ thống sẽ lưu trữ mềm và tắt mã thay vì xóa cứng. Tiếp tục?`
+      ? `Mã ${voucher.code} đã được dùng nhiều (${voucher.usageCount} lần). Hệ thống sẽ lưu trữ mềm và tắt mã thay vì xóa cứng. Tiếp tục?`
       : voucher?.usageCount
-      ? `Voucher ${voucher.code} đã được dùng ${voucher.usageCount} lần. Xóa khỏi danh sách admin?`
-      : 'Bạn có chắc muốn xóa voucher này?';
+      ? `Mã ${voucher.code} đã được dùng ${voucher.usageCount} lần. Xóa khỏi danh sách quản trị?`
+      : 'Bạn có chắc muốn xóa mã giảm giá này?';
 
     if (!window.confirm(confirmMessage)) {
       return;
@@ -212,11 +212,11 @@ export default function VouchersPage() {
       }
       if (res.data.data?.mode === 'soft-delete') {
         setError('');
-        window.alert('Voucher đã được lưu trữ mềm và tự động tắt do có lịch sử sử dụng cao.');
+        window.alert('Mã giảm giá đã được lưu trữ mềm và tự động tắt do có lịch sử sử dụng cao.');
       }
       fetchVouchers();
     } catch (err) {
-      setError(err.response?.data?.message || 'Không xóa được voucher');
+      setError(err.response?.data?.message || 'Không xóa được mã giảm giá');
     }
   };
 
@@ -225,7 +225,7 @@ export default function VouchersPage() {
       await api.put(`/vouchers/${voucher._id}`, { isActive: !voucher.isActive });
       fetchVouchers();
     } catch (err) {
-      setError(err.response?.data?.message || 'Không cập nhật được trạng thái voucher');
+      setError(err.response?.data?.message || 'Không cập nhật được trạng thái mã');
     }
   };
 
@@ -236,8 +236,8 @@ export default function VouchersPage() {
     }
 
     const confirmMessage = shouldActivate
-      ? `Khôi phục và bật ngay voucher ${voucher.code}?`
-      : `Khôi phục voucher ${voucher.code}? Mã sẽ trở lại danh sách chính ở trạng thái tắt.`;
+      ? `Khôi phục và bật ngay mã ${voucher.code}?`
+      : `Khôi phục mã ${voucher.code}? Mã sẽ trở lại danh sách chính ở trạng thái tắt.`;
 
     if (!window.confirm(confirmMessage)) {
       return;
@@ -247,25 +247,25 @@ export default function VouchersPage() {
       await api.put(`/vouchers/${id}/restore`, shouldActivate ? { activate: true } : {});
       fetchVouchers();
     } catch (err) {
-      setError(err.response?.data?.message || (shouldActivate ? 'Không thể khôi phục và bật voucher' : 'Không khôi phục được voucher'));
+      setError(err.response?.data?.message || (shouldActivate ? 'Không thể khôi phục và bật mã giảm giá' : 'Không khôi phục được mã giảm giá'));
     }
   };
 
   return (
     <Layout>
-      <h1>Vouchers</h1>
-      <p className="helper">Tạo mã giảm giá để admin demo được cả chiến dịch khuyến mãi lẫn checkout.</p>
+      <h1>Mã giảm giá</h1>
+      <p className="helper">Tạo mã giảm giá để phần quản trị demo được cả chiến dịch khuyến mãi lẫn bước thanh toán.</p>
 
       <div className="stats-grid stats-grid-4">
         <div className="stat-card accent-dark">
           <p className="stat-label">Tổng mã</p>
           <p className="stat-value">{summary.total}</p>
-          <p className="stat-footnote">Kho voucher đang có</p>
+          <p className="stat-footnote">Kho mã giảm giá hiện có</p>
         </div>
         <div className="stat-card accent-soft">
           <p className="stat-label">Đang bật</p>
           <p className="stat-value">{summary.active}</p>
-          <p className="stat-footnote">Sẵn sàng cho checkout</p>
+          <p className="stat-footnote">Sẵn sàng cho bước thanh toán</p>
         </div>
         <div className="stat-card accent-warm">
           <p className="stat-label">Giảm %</p>
@@ -273,9 +273,9 @@ export default function VouchersPage() {
           <p className="stat-footnote">Áp dụng theo phần trăm</p>
         </div>
         <div className="stat-card accent-alert">
-          <p className="stat-label">Archived</p>
+          <p className="stat-label">Đã lưu trữ</p>
           <p className="stat-value">{summary.archived}</p>
-          <p className="stat-footnote">Voucher đã archive mềm</p>
+          <p className="stat-footnote">Mã đã được lưu trữ mềm</p>
         </div>
       </div>
 
@@ -307,13 +307,13 @@ export default function VouchersPage() {
 
       <section className="form-card voucher-form-card">
         <div className="form-card-head">
-          <h3>{editingId ? 'Cập nhật voucher' : 'Tạo voucher mới'}</h3>
+          <h3>{editingId ? 'Cập nhật mã giảm giá' : 'Tạo mã giảm giá mới'}</h3>
           <p className="helper">Hỗ trợ cả giảm phần trăm lẫn giảm cố định, có thể bật tắt nhanh.</p>
         </div>
 
         {editingVoucher?.usageCount ? (
           <div className={`voucher-warning ${editingVoucher.usageCount >= HEAVY_USAGE_THRESHOLD ? 'is-strong' : ''}`}>
-            Voucher này đã được dùng {editingVoucher.usageCount} lần
+            Mã này đã được dùng {editingVoucher.usageCount} lần
             {editingVoucher.lastUsedAt ? `, gần nhất vào ${new Date(editingVoucher.lastUsedAt).toLocaleDateString('vi-VN')}` : ''}.
             {editingVoucher.usageCount >= HEAVY_USAGE_THRESHOLD ? ' Hạn chế đổi mã nếu không thật sự cần.' : ''}
           </div>
@@ -321,7 +321,7 @@ export default function VouchersPage() {
 
         <div className="grid-form voucher-grid-form">
           <input
-            placeholder="Mã voucher"
+            placeholder="Mã giảm giá"
             value={form.code}
             onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
           />
@@ -350,31 +350,31 @@ export default function VouchersPage() {
               checked={form.isActive}
               onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
             />
-            <span>Voucher đang hoạt động</span>
+            <span>Mã đang hoạt động</span>
           </label>
         </div>
 
         <div className="form-actions">
           <button className="btn-primary" onClick={saveVoucher} disabled={saving}>
-            {saving ? 'Đang lưu...' : editingId ? 'Cập nhật voucher' : 'Tạo voucher'}
+            {saving ? 'Đang lưu...' : editingId ? 'Cập nhật mã' : 'Tạo mã'}
           </button>
           {editingId ? <button className="btn-ghost" onClick={resetForm}>Hủy sửa</button> : null}
         </div>
       </section>
 
-      {loading ? <p className="page-card">Đang tải voucher...</p> : null}
+      {loading ? <p className="page-card">Đang tải mã giảm giá...</p> : null}
       {error ? <p className="error">{error}</p> : null}
 
       <div className="table-toolbar voucher-toolbar">
         <input
           className="search-input"
-          placeholder={activeFilter === 'ARCHIVED' ? 'Tìm trong archived vouchers' : 'Tìm theo mã hoặc loại voucher'}
+          placeholder={activeFilter === 'ARCHIVED' ? 'Tìm trong các mã đã lưu trữ' : 'Tìm theo mã hoặc loại giảm giá'}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
-      {!loading && !visibleVouchers.length ? <p className="page-card">{activeFilter === 'ARCHIVED' ? 'Chưa có voucher archive nào' : 'Chưa có voucher nào phù hợp bộ lọc'}</p> : null}
+      {!loading && !visibleVouchers.length ? <p className="page-card">{activeFilter === 'ARCHIVED' ? 'Chưa có mã nào được lưu trữ' : 'Chưa có mã giảm giá nào phù hợp bộ lọc'}</p> : null}
 
       {!!visibleVouchers.length && (
         <section className="page-card table-wrap">
@@ -386,7 +386,7 @@ export default function VouchersPage() {
                 <th>Giá trị</th>
                 <th>Điều kiện</th>
                 <th>Lượt dùng</th>
-                <th>Archive reason</th>
+                <th>Lý do lưu trữ</th>
                 <th>Trạng thái</th>
                 <th>Hành động</th>
               </tr>
@@ -427,7 +427,7 @@ export default function VouchersPage() {
                   </td>
                   <td>
                     {voucher.archivedAt ? (
-                      <span className="archived-pill">Archived</span>
+                      <span className="archived-pill">Đã lưu trữ</span>
                     ) : (
                       <button
                         type="button"
@@ -443,7 +443,7 @@ export default function VouchersPage() {
                       {voucher.archivedAt ? (
                         <>
                           <button className="btn-edit" onClick={() => restoreVoucher(voucher._id)}>Khôi phục</button>
-                          <button className="btn-primary" onClick={() => restoreVoucher(voucher._id, true)}>Restore and activate</button>
+                          <button className="btn-primary" onClick={() => restoreVoucher(voucher._id, true)}>Khôi phục và bật</button>
                         </>
                       ) : (
                         <>

@@ -4,7 +4,6 @@ import {
   Alert,
   Animated,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -74,8 +73,19 @@ export default function ProfileScreen({ navigation }) {
     }
   };
 
+  const handleLogout = () => {
+    Alert.alert(
+      "Đăng xuất",
+      "Bạn có chắc chắn muốn đăng xuất khỏi tài khoản này không?",
+      [
+        { text: "Hủy", style: "cancel" },
+        { text: "Đăng xuất", style: "destructive", onPress: logout },
+      ],
+    );
+  };
+
   return (
-    <Animated.View
+    <Animated.ScrollView
       style={[
         styles.container,
         {
@@ -83,13 +93,15 @@ export default function ProfileScreen({ navigation }) {
           transform: [{ translateY: revealAnim.interpolate({ inputRange: [0, 1], outputRange: [14, 0] }) }],
         },
       ]}
+      contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false}
     >
       <View style={styles.heroCard}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>{initials || "KH"}</Text>
         </View>
         <View style={styles.heroCopy}>
-          <Text style={styles.kicker}>Your profile</Text>
+          <Text style={styles.kicker}>Hồ sơ của bạn</Text>
           <Text style={styles.name}>{user?.name || "Khách hàng"}</Text>
           <Text style={styles.heroMeta}>{user?.email || "-"}</Text>
         </View>
@@ -200,7 +212,7 @@ export default function ProfileScreen({ navigation }) {
           <Ionicons name="heart-outline" size={20} color="#4f46e5" />
         </View>
         <View style={styles.actionCopy}>
-          <Text style={styles.actionTitle}>Wishlist</Text>
+          <Text style={styles.actionTitle}>Sản phẩm yêu thích</Text>
           <Text style={styles.actionSubtitle}>
             Lưu lại các sản phẩm muốn mua sau hoặc đang cân nhắc
           </Text>
@@ -222,15 +234,16 @@ export default function ProfileScreen({ navigation }) {
         </View>
       </Pressable>
 
-      <Pressable style={styles.btnDanger} onPress={logout}>
+      <Pressable style={styles.btnDanger} onPress={handleLogout}>
         <Text style={styles.btnDangerText}>Đăng xuất</Text>
       </Pressable>
-    </Animated.View>
+    </Animated.ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 16, gap: 10, backgroundColor: "#f1f5f9" },
+  container: { flex: 1, backgroundColor: "#f1f5f9" },
+  contentContainer: { padding: 16, gap: 10, paddingBottom: 110 },
   heroCard: {
     backgroundColor: "#1e1b4b",
     borderRadius: 24,
@@ -338,6 +351,7 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 14,
     alignItems: "center",
+    marginTop: 2,
   },
   btnDangerText: {
     color: "#b91c1c",

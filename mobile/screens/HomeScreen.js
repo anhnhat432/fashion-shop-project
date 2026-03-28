@@ -198,19 +198,19 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.heroCard}>
         <View style={styles.heroTopRow}>
           <View style={styles.heroPill}>
-            <Text style={styles.heroPillText}>Spring edit 2026</Text>
+            <Text style={styles.heroPillText}>Bộ sưu tập xuân 2026</Text>
           </View>
           <View style={styles.heroMiniStat}>
             <Text style={styles.heroMiniStatValue}>{cartCount}</Text>
-            <Text style={styles.heroMiniStatLabel}>items</Text>
+            <Text style={styles.heroMiniStatLabel}>món</Text>
           </View>
         </View>
 
         <Text style={styles.heroTitle}>
-          Nâng tủ đồ mỗi ngày với các item dễ phối.
+          Nâng tủ đồ mỗi ngày với những món dễ phối.
         </Text>
         <Text style={styles.heroSubtitle}>
-          Chọn nhanh theo danh mục, xem hàng mới và checkout gọn trong vài bước.
+          Chọn nhanh theo danh mục, xem hàng mới và thanh toán gọn trong vài bước.
         </Text>
 
         <View style={styles.heroStatsRow}>
@@ -312,7 +312,7 @@ export default function HomeScreen({ navigation }) {
             ) : null}
           </View>
           <View style={styles.actionCopyWrap}>
-            <Text style={styles.actionText}>Wishlist</Text>
+            <Text style={styles.actionText}>Yêu thích</Text>
             <Text style={styles.actionSubtext}>{wishlistCount} món đã lưu</Text>
           </View>
         </Pressable>
@@ -320,17 +320,17 @@ export default function HomeScreen({ navigation }) {
 
       <View style={styles.signalRow}>
         <View style={styles.signalCardDark}>
-          <Text style={styles.signalLabelLight}>Wishlist của bạn</Text>
+          <Text style={styles.signalLabelLight}>Danh sách yêu thích</Text>
           <Text style={styles.signalValueLight}>{wishlistCount}</Text>
           <Text style={styles.signalMetaLight}>
-            Lưu item muốn cân nhắc trước khi checkout
+            Lưu món muốn cân nhắc trước khi thanh toán
           </Text>
         </View>
         <View style={styles.signalCardLight}>
-          <Text style={styles.signalLabel}>Review đang có</Text>
+          <Text style={styles.signalLabel}>Đánh giá hiện có</Text>
           <Text style={styles.signalValue}>{reviewedCount}</Text>
           <Text style={styles.signalMeta}>
-            Sản phẩm đã có feedback từ người mua
+            Sản phẩm đã có phản hồi từ người mua
           </Text>
         </View>
       </View>
@@ -341,7 +341,7 @@ export default function HomeScreen({ navigation }) {
           onPress={() => openProductDetail(topRatedProduct._id)}
         >
           <View>
-            <Text style={styles.reviewSpotlightEyebrow}>Review spotlight</Text>
+            <Text style={styles.reviewSpotlightEyebrow}>Đánh giá nổi bật</Text>
             <Text style={styles.reviewSpotlightTitle} numberOfLines={2}>
               {topRatedProduct.name}
             </Text>
@@ -393,11 +393,11 @@ export default function HomeScreen({ navigation }) {
                   {item.name}
                 </Text>
                 <Text style={styles.featuredPrice}>
-                  {Number(item.salePrice || item.price || 0).toLocaleString()} d
+                  {Number(item.salePrice || item.price || 0).toLocaleString()} đ
                 </Text>
                 <View style={styles.featuredMetaRow}>
                   <Text style={styles.featuredMeta} numberOfLines={1}>
-                    {item.categoryId?.name || "Fashion essentials"}
+                    {item.categoryId?.name || "Thời trang cơ bản"}
                   </Text>
                   <Text style={styles.featuredReview}>
                     ★ {Number(item.averageRating || 0).toFixed(1)}

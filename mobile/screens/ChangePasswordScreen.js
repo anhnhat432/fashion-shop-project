@@ -75,7 +75,7 @@ export default function ChangePasswordScreen({ navigation }) {
     <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : "height"}>
       <ScrollView style={styles.container} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         <View style={styles.heroCard}>
-          <Text style={styles.heroEyebrow}>Account security</Text>
+          <Text style={styles.heroEyebrow}>Bảo mật tài khoản</Text>
           <Text style={styles.heroTitle}>Đổi mật khẩu</Text>
           <Text style={styles.heroSub}>Nhập mật khẩu hiện tại và mật khẩu mới để cập nhật.</Text>
         </View>

@@ -20,6 +20,11 @@ const paymentStatusMap = {
   PENDING: "Chưa thanh toán",
 };
 
+const paymentMethodMap = {
+  COD: "COD",
+  BANK_TRANSFER: "Chuyển khoản",
+};
+
 const orderStatusMap = {
   PENDING: "Chờ xác nhận",
   CONFIRMED: "Đã xác nhận",
@@ -115,7 +120,7 @@ export default function OrderHistoryScreen() {
       <View style={styles.heroCard}>
         <View style={styles.heroTop}>
           <View>
-            <Text style={styles.heroEyebrow}>Order journal</Text>
+            <Text style={styles.heroEyebrow}>Nhật ký đơn hàng</Text>
             <Text style={styles.heroTitle}>
               Theo dõi từng đơn hàng của bạn.
             </Text>
@@ -220,7 +225,7 @@ export default function OrderHistoryScreen() {
             <Ionicons name="file-tray-outline" size={34} color="#9ca3af" />
             <Text style={styles.emptyTitle}>Chưa có đơn hàng nào</Text>
             <Text style={styles.empty}>
-              Khi bạn checkout, lịch sử đơn sẽ xuất hiện ở đây.
+              Khi bạn thanh toán, lịch sử đơn sẽ xuất hiện ở đây.
             </Text>
           </View>
         }
@@ -294,7 +299,7 @@ export default function OrderHistoryScreen() {
             )}
             <View style={styles.metaRow}>
               <Text style={styles.meta}>
-                Phương thức: {item.paymentMethod}
+                Phương thức: {paymentMethodMap[item.paymentMethod] || item.paymentMethod}
               </Text>
               {item.transferReference ? (
                 <Text style={styles.meta}>
@@ -315,8 +320,8 @@ export default function OrderHistoryScreen() {
                         {orderItem.name}
                       </Text>
                       <Text style={styles.orderItemMeta}>
-                        {orderItem.size || "One size"} •{" "}
-                        {orderItem.color || "Neutral"} • x{orderItem.quantity}
+                        {orderItem.size || "Một cỡ"} •{" "}
+                        {orderItem.color || "Trung tính"} • x{orderItem.quantity}
                       </Text>
                     </View>
                     <Text style={styles.orderItemPrice}>
@@ -541,4 +546,3 @@ const styles = StyleSheet.create({
   },
   retryText: { color: "#fff", fontWeight: "700", fontFamily: FONTS.bold },
 });
-

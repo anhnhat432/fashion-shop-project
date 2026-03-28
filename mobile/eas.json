@@ -10,7 +10,7 @@
         "buildType": "apk"
       },
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://fashion-shop-api.onrender.com/api"
+        "EXPO_PUBLIC_API_BASE_URL": "https://fashion-shop-project-4pxx.onrender.com/api"
       }
     },
     "production": {
@@ -18,7 +18,7 @@
         "buildType": "app-bundle"
       },
       "env": {
-        "EXPO_PUBLIC_API_BASE_URL": "https://fashion-shop-api.onrender.com/api"
+        "EXPO_PUBLIC_API_BASE_URL": "https://fashion-shop-project-4pxx.onrender.com/api"
       }
     }
   },
